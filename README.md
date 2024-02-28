@@ -4,9 +4,9 @@
 
 ![Build Status](https://github.com/mikaelvesavuori/mikrovalid/workflows/main/badge.svg)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikrovalid&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikrovalid)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikromatch&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikromatch)
 
-[![codecov](https://codecov.io/gh/mikaelvesavuori/mikrovalid/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikrovalid)
+[![codecov](https://codecov.io/gh/mikaelvesavuori/mikromatch/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikromatch)
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/9c31ce9df8d610008267/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikrovalid/maintainability)
 
