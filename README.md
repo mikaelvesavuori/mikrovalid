@@ -1,6 +1,6 @@
 # mikrovalid
 
-**MikroValid is the minimalist, smart, and easy way to validate objects on both the client or server-side.**.
+**MikroValid is the minimalist, smart, and easy way to validate objects on both the client or server-side.**
 
 ![Build Status](https://github.com/mikaelvesavuori/mikrovalid/workflows/main/badge.svg)
 
