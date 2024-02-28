@@ -1,7 +1,7 @@
 {
   "name": "mikrovalid",
   "description": "MikroValid is the JSON validator that cuts out all the bullshit.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "Mikael Vesavuori",
   "license": "MIT",
   "main": "./lib/index.js",
