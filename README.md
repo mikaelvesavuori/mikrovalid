@@ -4,6 +4,12 @@
 
 ![Build Status](https://github.com/mikaelvesavuori/mikromatch/workflows/main/badge.svg)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikromatch&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikromatch)
+
+[![codecov](https://codecov.io/gh/mikaelvesavuori/mikromatch/branch/main/graph/badge.svg?token=S7D3RM9TO7)](https://codecov.io/gh/mikaelvesavuori/mikromatch)
+
+[![Maintainability](https://api.codeclimate.com/v1/badges/9c31ce9df8d610008267/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikromatch/maintainability)
+
 ---
 
 MikroMatch is the JSON validator that cuts out all the bullshit:
