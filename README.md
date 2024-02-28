@@ -18,7 +18,7 @@ MikroValid is the JSON validator that cuts out all the bullshit:
 - Doesn't pollute your code with "convenient" APIs
 - Minimalist approach that will work for the majority of conventional-type objects
 - Meant to work effortlessly in both client- and server-side environments
-- Tiny (~1.8 KB gzipped), which is ~25-80x smaller than common, popular options
+- Tiny (~1.8 KB gzipped), which is ~7-80x smaller than common, popular options
 - Zero dependencies
 - Has 100% test coverage
 
@@ -195,7 +195,30 @@ The `type` is the only **required** item-level object. Allowed types are:
 - `object`
 - `array`
 
-Note that there is no further validation of `array` items (i.e. their contents) other than ensuring they are an in fact an array (and if you like, of a certain length etc., as per below).
+You can require basic validation of `array` items by setting the expected type in `items.type`:
+
+```json
+{
+  "properties": {
+    "books": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}
+```
+
+For this schema, a valid input could for example be something like:
+
+```json
+{
+  "books": [{ "author": "Cormac McCarthy" }, { "author": "William Blake" }]
+}
+```
+
+Note that this will not work for mixed arrays or for any deeper inspection of object properties.
 
 #### Formats
 
@@ -311,10 +334,6 @@ You can provide your own regular expressions to match for.
   }
 }
 ```
-
-## Future ideas
-
-- Add support for checking values of array items
 
 ## License
 

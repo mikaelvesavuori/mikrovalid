@@ -170,7 +170,16 @@ export class MikroValid {
     propertyKey: Record<string, any>,
     results: Result[]
   ) {
-    if (this.isObject(inputKey)) {
+    if (this.isArray(inputKey)) {
+      const validation = this.validateProperty(key, propertyKey, inputKey);
+      results.push(validation);
+
+      // @ts-ignore - inputKey is an array
+      inputKey.forEach((arrayItem: ValidationValue) => {
+        const validation = this.validateProperty(key, propertyKey['items'] || [], arrayItem);
+        results.push(validation);
+      });
+    } else if (this.isObject(inputKey)) {
       const keys = Object.keys(inputKey);
       keys.forEach((innerKey: string) => {
         // @ts-ignore - innerKey will be an object

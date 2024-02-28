@@ -137,6 +137,69 @@ test('It should validate an array', (t) => {
   t.is(success, expected);
 });
 
+test('It should validate an array containing numbers', (t) => {
+  const expected = true;
+  const { success } = match.test(
+    {
+      properties: {
+        payments: {
+          type: 'array',
+          items: {
+            type: 'number'
+          }
+        }
+      }
+    },
+    {
+      payments: [1000, 700, 540]
+    }
+  );
+
+  t.is(success, expected);
+});
+
+test('It should validate an array containing objects', (t) => {
+  const expected = true;
+  const { success } = match.test(
+    {
+      properties: {
+        books: {
+          type: 'array',
+          items: {
+            type: 'object'
+          }
+        }
+      }
+    },
+    {
+      books: [{ author: 'Cormac McCarthy' }, { author: 'William Blake' }]
+    }
+  );
+
+  t.is(success, expected);
+});
+
+test('It should invalidate an array that should only contain numbers', (t) => {
+  const expected = false;
+  const { success } = match.test(
+    {
+      properties: {
+        payments: {
+          type: 'array',
+          items: {
+            type: 'number'
+          }
+        }
+      }
+    },
+    {
+      payments: ['1000', 700, 540]
+    }
+  );
+
+  t.is(success, expected);
+});
+
 test('It should invalidate an array that is too long', (t) => {
   const expected = false;
   const { success } = match.test(
