@@ -9,7 +9,7 @@
     //"no-unused-vars": "off",
     "@typescript-eslint/no-explicit-any": ["off"],
     "@typescript-eslint/ban-ts-comment": ["warn"],
-    "complexity": ["warn", { "max": 20 }]
+    "complexity": ["warn", { "max": 9 }]
   },
   "env": {
     "node": true,

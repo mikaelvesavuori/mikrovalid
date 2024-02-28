@@ -94,46 +94,71 @@ export class MikroMatch {
     const properties = schema.properties || schema;
     const isAdditionalsOk = schema.additionalProperties ?? true;
 
-    if (!this.areRequiredKeysPresent(schema.required || [], input)) {
-      errors.push(`Missing one or more of the required keys: '${schema.required}'!`);
-    }
-
-    if (!isAdditionalsOk) {
-      const additionals = this.findNonOverlappingElements(
-        Object.keys(input),
-        Object.keys(properties)
-      );
-      if (additionals.length > 0)
-        errors.push(`Has additional disallowed properties: '${additionals}'!`);
-    }
+    errors = this.checkForRequiredKeysErrors(schema.required || [], input, errors);
+    errors = this.checkForOverlappingInputErrors(
+      isAdditionalsOk,
+      Object.keys(input),
+      Object.keys(properties),
+      errors
+    );
 
     for (const key in properties) {
       const propertyKey = properties[key];
       const inputKey: ValidationValue = input[key];
       const isAdditionalsOk = propertyKey.additionalProperties ?? true;
 
-      if (
-        !this.areRequiredKeysPresent(propertyKey.required || [], inputKey as Record<string, any>)
-      ) {
-        errors.push(`Missing one or more required keys: '${propertyKey.required}'!`);
-      }
-
-      if (!isAdditionalsOk) {
-        const additionals = this.findNonOverlappingElements(
-          Object.keys(inputKey),
-          Object.keys(propertyKey)
-        );
-        if (additionals.length > 0)
-          errors.push(`Has additional disallowed properties: '${additionals}'!`);
-      }
+      errors = this.checkForRequiredKeysErrors(
+        propertyKey.required || [],
+        inputKey as Record<string, any>,
+        errors
+      );
 
       if (inputKey) {
+        errors = this.checkForOverlappingInputErrors(
+          isAdditionalsOk,
+          Object.keys(inputKey),
+          Object.keys(propertyKey),
+          errors
+        );
+
         this.handleValidation(key, inputKey as string, propertyKey, results);
         this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
       }
     }
 
     return { results, errors };
+  }
+
+  /**
+   * @description TODO
+   */
+  private checkForRequiredKeysErrors(
+    schema: string[],
+    input: Record<string, any>,
+    errors: string[]
+  ) {
+    if (!this.areRequiredKeysPresent(schema, input))
+      errors.push(`Missing one or more of the required keys: '${schema}'!`); // TODO verify, was schema.required
+
+    return errors;
+  }
+
+  /**
+   * @description TODO
+   */
+  private checkForOverlappingInputErrors(
+    isAdditionalsOk: boolean,
+    inputKeys: string[],
+    propertyKeys: string[],
+    errors: string[]
+  ) {
+    if (!isAdditionalsOk) {
+      const additionals = this.findNonOverlappingElements(inputKeys, propertyKeys);
+      if (additionals.length > 0)
+        errors.push(`Has additional disallowed properties: '${additionals}'!`);
+    }
+
+    return errors;
   }
 
   /**
