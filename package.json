@@ -9,7 +9,14 @@
     "type": "git",
     "url": "git+https://github.com/mikaelvesavuori/mikrovalid.git"
   },
-  "keywords": [],
+  "keywords": [
+    "json",
+    "schema",
+    "validation",
+    "validator",
+    "schema-validation",
+    "object-validator"
+  ],
   "bugs": {
     "url": "https://github.com/mikaelvesavuori/mikrovalid/issues"
   },
