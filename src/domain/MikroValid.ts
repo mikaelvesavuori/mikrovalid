@@ -14,7 +14,7 @@ export class MikroValid {
    * Provide a JSON object schema and your input and MikroValid
    * takes care of the rest.
    *
-   * @example ```
+   * @example
    * import { MikroValid } from './MikroValid';
    *
    * const mikrovalid = new MikroValid();
@@ -49,7 +49,6 @@ export class MikroValid {
    * const { valid, errors } = mikrovalid.test(schema, input);
    *
    * console.log('Was the test successul?', success);
-   * ```
    */
   public test(schema: ValidationSchema, input: Record<string, any>) {
     if (!input) throw new Error('Missing input!');
