@@ -1,0 +1,65 @@
+{
+  "name": "mikromatch",
+  "description": "MikroMatch is the JSON validator that cuts out all the bullshit.",
+  "version": "0.0.1",
+  "author": "Mikael Vesavuori",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikaelvesavuori/mikromatch.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/mikaelvesavuori/mikromatch/issues"
+  },
+  "homepage": "https://github.com/mikaelvesavuori/mikromatch#readme",
+  "files": [
+    "/lib",
+    "!/lib/**/*.map",
+    "!/tests"
+  ],
+  "scripts": {
+    "start": "npx ts-node src/index.ts",
+    "test": "npx c8 -reporter=lcov ava",
+    "test:watch": "npx c8 -reporter=lcov ava --watch",
+    "build": "npm run clean && npx tsc --project tsconfig.build.json",
+    "clean": "rm -rf lib",
+    "package": "npm pack",
+    "prepublishOnly": "npm run build",
+    "prepare": "husky install",
+    "docs": "npm run docs:clean && npm run docs:typedoc",
+    "docs:clean": "rm -rf docs",
+    "docs:typedoc": "npx typedoc --entryPoints src --entryPointStrategy expand --exclude '**/*+(test).ts' --externalPattern 'node_modules/**/*' --excludeExternals --out docs/"
+  },
+  "devDependencies": {
+    "@ava/typescript": "4",
+    "@types/node": "20",
+    "@typescript-eslint/eslint-plugin": "7",
+    "@typescript-eslint/parser": "7",
+    "ava": "6",
+    "c8": "9",
+    "eslint": "8",
+    "eslint-config-prettier": "9",
+    "eslint-plugin-prettier": "5",
+    "husky": "9",
+    "prettier": "3",
+    "ts-node": "10",
+    "typedoc": "^0.25.9",
+    "typescript": "5"
+  },
+  "ava": {
+    "typescript": {
+      "rewritePaths": {
+        "src/": "lib/"
+      },
+      "compile": false
+    },
+    "files": [
+      "tests/**/*.ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  }
+}
