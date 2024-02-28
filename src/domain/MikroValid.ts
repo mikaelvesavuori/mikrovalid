@@ -4,20 +4,20 @@ import {
   ValidationResult,
   ValidationSchema,
   ValidationValue
-} from '../interfaces/MikroMatch';
+} from '../interfaces/MikroValid';
 
-export class MikroMatch {
+export class MikroValid {
   /**
-   * @description MikroMatch is a lightweight validator
+   * @description MikroValid is a lightweight validator
    * that works both on the client and server.
    *
-   * Provide a JSON object schema and your input and MikroMatch
+   * Provide a JSON object schema and your input and MikroValid
    * takes care of the rest.
    *
    * @example ```
-   * import { MikroMatch } from './MikroMatch';
+   * import { MikroValid } from './MikroValid';
    *
-   * const mikromatch = new MikroMatch();
+   * const mikrovalid = new MikroValid();
    *
    * const schema = {
    *   properties: {
@@ -46,7 +46,7 @@ export class MikroMatch {
    *   }
    * };
    *
-   * const { valid, errors } = mikromatch.test(schema, input);
+   * const { valid, errors } = mikrovalid.test(schema, input);
    *
    * console.log('Was the test successul?', success);
    * ```

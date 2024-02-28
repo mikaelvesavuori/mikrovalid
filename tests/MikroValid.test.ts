@@ -1,8 +1,8 @@
 import test from 'ava';
 
-import { MikroMatch } from '../src/domain/MikroMatch';
+import { MikroValid } from '../src/domain/MikroValid';
 
-const match = new MikroMatch();
+const match = new MikroValid();
 
 /**
  * POSITIVE TESTS

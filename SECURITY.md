@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-These versions of `mikromatch` are currently being supported with security updates.
+These versions of `mikrovalid` are currently being supported with security updates.
 
 | Version | Supported          |
 | ------- | ------------------ |

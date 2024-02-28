@@ -1,24 +1,24 @@
-# mikromatch
+# mikrovalid
 
-**MikroMatch is the minimalist, smart, and easy way to validate objects on both the client or server-side.**.
+**MikroValid is the minimalist, smart, and easy way to validate objects on both the client or server-side.**.
 
-![Build Status](https://github.com/mikaelvesavuori/mikromatch/workflows/main/badge.svg)
+![Build Status](https://github.com/mikaelvesavuori/mikrovalid/workflows/main/badge.svg)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikromatch&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikromatch)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikrovalid&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikrovalid)
 
-[![codecov](https://codecov.io/gh/mikaelvesavuori/mikromatch/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikromatch)
+[![codecov](https://codecov.io/gh/mikaelvesavuori/mikrovalid/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikrovalid)
 
-[![Maintainability](https://api.codeclimate.com/v1/badges/9c31ce9df8d610008267/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikromatch/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/9c31ce9df8d610008267/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikrovalid/maintainability)
 
 ---
 
-MikroMatch is the JSON validator that cuts out all the bullshit:
+MikroValid is the JSON validator that cuts out all the bullshit:
 
 - Dead easy, no proprietary stuff - uses simple JSON objects for schemas and input
 - Doesn't pollute your code with "convenient" APIs
 - Minimalist approach that will work for the majority of conventional-type objects
 - Meant to work effortlessly in both client- and server-side environments
-- Tiny (~5 KB gzipped), which is ~10-30x smaller than the common, popular options
+- Tiny (~1.8 KB gzipped), which is ~25-80x smaller than common, popular options
 - Zero dependencies
 - Has 100% test coverage
 
@@ -28,11 +28,11 @@ MikroMatch is the JSON validator that cuts out all the bullshit:
 
 ```typescript
 // ES5 format
-const { MikroMatch } = require('mikromatch');
+const { MikroValid } = require('mikrovalid');
 // ES6 format
-import { MikroMatch } from 'mikromatch';
+import { MikroValid } from 'mikrovalid';
 
-const mikromatch = new MikroMatch();
+const mikrovalid = new MikroValid();
 
 const schema = {
   properties: {
@@ -69,7 +69,7 @@ const input = {
   }
 };
 
-const { success, errors } = mikromatch.test(schema, input);
+const { success, errors } = mikrovalid.test(schema, input);
 
 console.log('Was the test successul?', success);
 ```

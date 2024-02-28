@@ -1,19 +1,19 @@
 {
-  "name": "mikromatch",
-  "description": "MikroMatch is the JSON validator that cuts out all the bullshit.",
+  "name": "mikrovalid",
+  "description": "MikroValid is the JSON validator that cuts out all the bullshit.",
   "version": "0.0.1",
   "author": "Mikael Vesavuori",
   "license": "MIT",
   "main": "./lib/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mikaelvesavuori/mikromatch.git"
+    "url": "git+https://github.com/mikaelvesavuori/mikrovalid.git"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/mikaelvesavuori/mikromatch/issues"
+    "url": "https://github.com/mikaelvesavuori/mikrovalid/issues"
   },
-  "homepage": "https://github.com/mikaelvesavuori/mikromatch#readme",
+  "homepage": "https://github.com/mikaelvesavuori/mikrovalid#readme",
   "files": [
     "/lib",
     "!/lib/**/*.map",
@@ -61,5 +61,8 @@
     "require": [
       "ts-node/register"
     ]
+  },
+  "dependencies": {
+    "mikrovalid": "^0.0.1"
   }
 }

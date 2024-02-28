@@ -1,1 +1,1 @@
-export * from './domain/MikroMatch';
+export * from './domain/MikroValid';
