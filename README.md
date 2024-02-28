@@ -1,6 +1,6 @@
 # mikrovalid
 
-**MikroValid is the minimalist, smart, and easy way to validate objects on both the client or server-side.**
+**MikroValid is the minimalist, smart, and easy way to validate objects on both the client and server-side.**
 
 ![Build Status](https://github.com/mikaelvesavuori/mikrovalid/workflows/main/badge.svg)
 
@@ -14,7 +14,7 @@
 
 MikroValid is the JSON validator that cuts out all the bullshit:
 
-- Dead easy, no proprietary stuff - uses simple JSON objects for schemas and input
+- Dead easy, no proprietary stuff — uses simple JSON objects for schemas and input
 - Doesn't pollute your code with "convenient" APIs
 - Minimalist approach that will work for the majority of conventional-type objects
 - Meant to work effortlessly in both client- and server-side environments
@@ -114,7 +114,7 @@ A valid input for this particular schema is:
 
 #### Properties
 
-`properties` is the only **required** root-level object. Each key describes a property of the expected input. In the example, `name` is of the type `string`. Note that you never repeat the `properties` keyword other than the first time, in the root.
+`properties` is the only **required** root-level object. Each key describes a property of the expected input. In the example, `name` is of the type `string`. Note that you never repeat the `properties` keyword—it's used only in the root.
 
 #### Allowing or disallowing additional properties
 
@@ -150,7 +150,7 @@ A payload like this...
 
 ...would therefore break the validation.
 
-The same can be done for nested objects:
+The same can be done with nested objects:
 
 ```json
 {
@@ -195,7 +195,7 @@ The `type` is the only **required** item-level object. Allowed types are:
 - `object`
 - `array`
 
-Note that there is no further validation of array objects (i.e. their contents) other than ensures they are an array (and if you like, of a certain length).
+Note that there is no further validation of `array` items (i.e. their contents) other than ensuring they are an in fact an array (and if you like, of a certain length etc., as per below).
 
 #### Formats
 
@@ -293,6 +293,20 @@ This example shows 3 levels of nesting with objects.
     "phone": {
       "type": "number",
       "minValue": 1000
+    }
+  }
+}
+```
+
+#### Matches regular expression pattern
+
+You can provide your own regular expressions to match for.
+
+```json
+{
+  "properties": {
+    "runtime": {
+      "matchesPattern": /^(nodejs20|python3.7)$/
     }
   }
 }
