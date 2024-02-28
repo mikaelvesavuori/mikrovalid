@@ -142,7 +142,7 @@ A payload like this...
 ```json
 {
   "first": "the first",
-  "second": "the first",
+  "second": "the second",
   "third": "the third",
   "fourth": "the fourth"
 }
