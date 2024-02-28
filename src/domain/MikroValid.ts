@@ -130,7 +130,7 @@ export class MikroValid {
   }
 
   /**
-   * @description TODO
+   * @description Checks if there are required keys and adds errors if needed.
    */
   private checkForRequiredKeysErrors(
     schema: string[],
@@ -138,13 +138,13 @@ export class MikroValid {
     errors: string[]
   ) {
     if (!this.areRequiredKeysPresent(schema, input))
-      errors.push(`Missing one or more of the required keys: '${schema}'!`); // TODO verify, was schema.required
+      errors.push(`Missing one or more of the required keys: '${schema}'!`);
 
     return errors;
   }
 
   /**
-   * @description TODO
+   * @description Checks if there are disallowed properties and adds errors if needed.
    */
   private checkForOverlappingInputErrors(
     isAdditionalsOk: boolean,
