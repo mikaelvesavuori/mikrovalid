@@ -249,7 +249,7 @@ export class MikroValid {
       key,
       value,
       success,
-      error: error || ''
+      error: error ?? ''
     };
   }
 
@@ -358,28 +358,22 @@ export class MikroValid {
   private isCorrectFormat(expected: string, input: string) {
     switch (expected) {
       case 'alphanumeric': {
-        const regex = /^[a-zA-Z0-9]+$/;
-        return regex.test(input);
+        return new RegExp(/^[a-zA-Z0-9]+$/).test(input);
       }
       case 'numeric': {
-        const regex = /^-?\d+(\.\d+)?$/;
-        return regex.test(input);
+        return new RegExp(/^-?\d+(\.\d+)?$/).test(input);
       }
       case 'email': {
-        const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-        return regex.test(input);
+        return new RegExp(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/).test(input);
       }
       case 'date': {
-        const regex = /^\d{4}-\d{2}-\d{2}$/;
-        return regex.test(input);
+        return new RegExp(/^\d{4}-\d{2}-\d{2}$/).test(input);
       }
       case 'url': {
-        const regex = /^(https?):\/\/[^\s$.?#].[^\s]*$/;
-        return regex.test(input);
+        return new RegExp(/^(https?):\/\/[^\s$.?#].[^\s]*$/).test(input);
       }
       case 'hexColor': {
-        const regex = /^#?([a-f0-9]{6}|[a-f0-9]{3})$/i;
-        return regex.test(input);
+        return new RegExp(/^#?([a-f0-9]{6}|[a-f0-9]{3})$/i).test(input);
       }
     }
   }
