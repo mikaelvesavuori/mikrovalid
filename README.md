@@ -8,7 +8,7 @@
 
 [![codecov](https://codecov.io/gh/mikaelvesavuori/mikrovalid/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikrovalid)
 
-[![Maintainability](https://api.codeclimate.com/v1/badges/9c31ce9df8d610008267/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikrovalid/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/d42f8b255d893431050f/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikrovalid/maintainability)
 
 ---
 
