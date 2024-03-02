@@ -139,12 +139,11 @@ export class MikroValid {
   ) {
     if (!this.areRequiredKeysPresent(schema, input))
       errors.push({
-        key: `Expected: '${schema}'`,
+        key: `${schema}`,
         value: input,
         success: false,
         error: `Missing one or more of the required keys: '${schema}'!`
       });
-    //errors.push(`Missing one or more of the required keys: '${schema}'!`);
 
     return errors;
   }
@@ -162,8 +161,8 @@ export class MikroValid {
       const additionals = this.findNonOverlappingElements(inputKeys, propertyKeys);
       if (additionals.length > 0)
         errors.push({
-          key: `Expected: '${propertyKeys}'`,
-          value: `Received: '${inputKeys}'`,
+          key: `${propertyKeys}`,
+          value: inputKeys,
           success: false,
           error: `Has additional disallowed properties: '${additionals}'!`
         });
