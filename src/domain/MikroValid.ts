@@ -1,5 +1,6 @@
 import {
   Result,
+  ValidationError,
   ValidationProperties,
   ValidationResult,
   ValidationSchema,
@@ -48,7 +49,7 @@ export class MikroValid {
    *
    * const { valid, errors } = mikrovalid.test(schema, input);
    *
-   * console.log('Was the test successul?', success);
+   * console.log('Was the test successful?', success);
    */
   public test(schema: ValidationSchema, input: Record<string, any>) {
     if (!input) throw new Error('Missing input!');
@@ -66,7 +67,7 @@ export class MikroValid {
   /**
    * @description Aggregate errors into a flat array.
    */
-  private compileErrors(results: Result[], errors: string[]) {
+  private compileErrors(results: Result[], errors: ValidationError[]) {
     const resultErrors = results.filter((result: Result) => result.success === false);
     return [...errors, resultErrors].flatMap((error: any) => error);
   }
@@ -74,7 +75,7 @@ export class MikroValid {
   /**
    * @description Check if this was, ultimately, a successful and valid test run.
    */
-  private isSuccessful(results: Result[], errors: string[]) {
+  private isSuccessful(results: Result[], errors: ValidationError[]) {
     return (
       results.every((result: Record<string, any>) => result.success === true) && errors.length === 0
     );
@@ -88,13 +89,13 @@ export class MikroValid {
     schema: Record<string, any>,
     input: Record<string, any>,
     results: Result[] = [],
-    errors: string[] = []
+    errors: ValidationError[] = []
   ) {
     const properties = schema.properties || schema;
     const isAdditionalsOk = schema.additionalProperties ?? true;
 
     errors = this.checkForRequiredKeysErrors(schema.required || [], input, errors);
-    errors = this.checkForOverlappingInputErrors(
+    errors = this.checkForDisallowedProperties(
       isAdditionalsOk,
       Object.keys(input),
       Object.keys(properties),
@@ -113,7 +114,7 @@ export class MikroValid {
       );
 
       if (inputKey) {
-        errors = this.checkForOverlappingInputErrors(
+        errors = this.checkForDisallowedProperties(
           isAdditionalsOk,
           Object.keys(inputKey),
           Object.keys(propertyKey),
@@ -134,10 +135,16 @@ export class MikroValid {
   private checkForRequiredKeysErrors(
     schema: string[],
     input: Record<string, any>,
-    errors: string[]
+    errors: ValidationError[]
   ) {
     if (!this.areRequiredKeysPresent(schema, input))
-      errors.push(`Missing one or more of the required keys: '${schema}'!`);
+      errors.push({
+        key: `Expected: '${schema}'`,
+        value: input,
+        success: false,
+        error: `Missing one or more of the required keys: '${schema}'!`
+      });
+    //errors.push(`Missing one or more of the required keys: '${schema}'!`);
 
     return errors;
   }
@@ -145,16 +152,21 @@ export class MikroValid {
   /**
    * @description Checks if there are disallowed properties and adds errors if needed.
    */
-  private checkForOverlappingInputErrors(
+  private checkForDisallowedProperties(
     isAdditionalsOk: boolean,
     inputKeys: string[],
     propertyKeys: string[],
-    errors: string[]
+    errors: ValidationError[]
   ) {
     if (!isAdditionalsOk) {
       const additionals = this.findNonOverlappingElements(inputKeys, propertyKeys);
       if (additionals.length > 0)
-        errors.push(`Has additional disallowed properties: '${additionals}'!`);
+        errors.push({
+          key: `Expected: '${propertyKeys}'`,
+          value: `Received: '${inputKeys}'`,
+          success: false,
+          error: `Has additional disallowed properties: '${additionals}'!`
+        });
     }
 
     return errors;
@@ -200,7 +212,7 @@ export class MikroValid {
     inputKey: Record<string, any>,
     propertyKey: Record<string, any>,
     results: Result[],
-    errors: string[]
+    errors: ValidationError[]
   ) {
     if (this.isObject(inputKey)) {
       const nestedObjects = this.getNestedObjects(inputKey);

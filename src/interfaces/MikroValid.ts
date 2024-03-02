@@ -29,3 +29,5 @@ export type ValidationValue =
   | Record<string, any>[];
 
 export type ValidationTypes = 'string' | 'number' | 'boolean' | 'object' | 'array';
+
+export type ValidationError = Result;

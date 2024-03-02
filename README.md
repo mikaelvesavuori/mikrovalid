@@ -71,18 +71,17 @@ const input = {
 
 const { success, errors } = mikrovalid.test(schema, input);
 
-console.log('Was the test successul?', success);
+console.log('Was the test successful?', success);
 ```
 
 ### Errors
 
 The `errors` object includes an aggregation of any errors, both those relating to field-level validation and for inline failures emitted when not having required keys or having excess keys.
 
-An example with both types of errors could look like:
+Since version `1.0.3` both error formats have the same shape:
 
 ```json
 [
-  "Has additional disallowed properties: 'somethingElse'!",
   { "key": "blip", "value": 123, "success": false, "error": "Invalid type" }
 ]
 ```

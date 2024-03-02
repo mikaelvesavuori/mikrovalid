@@ -906,7 +906,13 @@ test('It should work with the demo example', (t) => {
  * NEGATIVE TESTS
  */
 test('It should fail when missing a required key in the base', (t) => {
-  const expected = `Missing one or more of the required keys: 'thing'!`;
+  const expected = {
+    error: "Missing one or more of the required keys: 'thing'!",
+    key: "Expected: 'thing'",
+    success: false,
+    value: { something: 123 }
+  };
+
   const result = match.test(
     {
       properties: {
@@ -916,14 +922,22 @@ test('It should fail when missing a required key in the base', (t) => {
       },
       required: ['thing']
     },
-    {}
+    { something: 123 }
   );
 
-  t.is(result.errors[0], expected);
+  t.deepEqual(result.errors[0], expected);
 });
 
 test('It should fail when missing a required key in the root of a nested object', (t) => {
-  const expected = `Missing one or more of the required keys: 'things'!`;
+  const expected = {
+    error: "Missing one or more of the required keys: 'things'!",
+    key: "Expected: 'things'",
+    success: false,
+    value: {
+      dings: {}
+    }
+  };
+
   const result = match.test(
     {
       properties: {
@@ -942,11 +956,17 @@ test('It should fail when missing a required key in the root of a nested object'
     }
   );
 
-  t.is(result.errors[0], expected);
+  t.deepEqual(result.errors[0], expected);
 });
 
 test('It should fail when missing a required key in the child of a nested object', (t) => {
-  const expected = `Missing one or more of the required keys: 'deeperThings'!`;
+  const expected = {
+    error: "Missing one or more of the required keys: 'deeperThings'!",
+    key: "Expected: 'deeperThings'",
+    success: false,
+    value: {}
+  };
+
   const result = match.test(
     {
       properties: {
@@ -973,7 +993,7 @@ test('It should fail when missing a required key in the child of a nested object
     }
   );
 
-  t.is(result.errors[0], expected);
+  t.deepEqual(result.errors[0], expected);
 });
 
 test('It should throw an error if there is no input', (t) => {
