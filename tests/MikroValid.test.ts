@@ -282,184 +282,173 @@ test('It should validate a nested object', (t) => {
  * TYPES
  */
 
-test('It should validate a string that has the correct type', (t) => {
-  const expected = true;
-  const { success } = match.test(
-    {
-      properties: {
-        username: {
-          type: 'string'
+const toMacro = (type: 'string' | 'number' | 'boolean' | 'object' | 'array') =>
+  test.macro({
+    exec(t, input, expected: boolean) {
+      const { success } = match.test(
+        {
+          properties: {
+            property: {
+              type
+            }
+          }
+        },
+        {
+          property: input
         }
-      }
+      );
+      t.is(success, expected);
     },
-    {
-      username: 'SamPerson'
+    title(providedTitle = '', input, expected) {
+      return `${providedTitle} [${input} = ${expected}]`.trim();
     }
-  );
+  });
 
-  t.is(success, expected);
+const stringMacro = toMacro('string');
+
+[
+  '',
+  'string',
+  String('boxed'),
+  `template`,
+  '😄',
+  '\uD801\uDC00',
+  String.raw`C:\Folder\folder\file.html`
+].forEach((input) =>
+  test('It should validate a string that has the correct type', stringMacro, input, true)
+);
+
+[
+  -1,
+  0,
+  1,
+  NaN,
+  new Date(),
+  Infinity,
+  new Set(),
+  new Map(),
+  () => {},
+  null,
+  undefined,
+  { [Symbol.toStringTag]: 'Empty Object' },
+  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+].forEach((input) => {
+  test(
+    'It should invalidate a string that does not have the correct type',
+    stringMacro,
+    input,
+    false
+  );
 });
 
-test('It should invalidate a string that does not have the correct type', (t) => {
-  const expected = false;
-  const { success } = match.test(
-    {
-      properties: {
-        username: {
-          type: 'string'
-        }
-      }
-    },
-    {
-      username: 1
-    }
-  );
+const numberMacro = toMacro('number');
 
-  t.is(success, expected);
+[
+  -1,
+  0,
+  1,
+  Infinity,
+  -Infinity,
+  0.1,
+  2.0,
+  Number.MAX_SAFE_INTEGER,
+  Number.MAX_VALUE,
+  Number.MIN_VALUE,
+  Number(3)
+].forEach((input) => {
+  test('It should validate a number that has the correct type ', numberMacro, input, true);
 });
 
-test('It should validate a number that has the correct type', (t) => {
-  const expected = true;
-  const { success } = match.test(
-    {
-      properties: {
-        phone: {
-          type: 'number'
-        }
-      }
-    },
-    {
-      phone: 1
-    }
+[
+  'string',
+  '',
+  NaN,
+  new Date(),
+  new Set(),
+  new Map(),
+  () => {},
+  null,
+  undefined,
+  { [Symbol.toStringTag]: 'Empty Object' },
+  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+].forEach((input) => {
+  test(
+    'It should invalidate a number that does not have the correct type',
+    numberMacro,
+    input,
+    false
   );
-
-  t.is(success, expected);
 });
 
-test('It should invalidate a number that does not have the correct type', (t) => {
-  const expected = false;
-  const { success } = match.test(
-    {
-      properties: {
-        phone: {
-          type: 'number'
-        }
-      }
-    },
-    {
-      phone: '1'
-    }
-  );
+const booleanMacro = toMacro('boolean');
 
-  t.is(success, expected);
+[true, false].forEach((input) => {
+  test('It should validate a boolean that has the correct type', booleanMacro, input, true);
 });
 
-test('It should validate a boolean that has the correct type', (t) => {
-  const expected = true;
-  const { success } = match.test(
-    {
-      properties: {
-        isFabulous: {
-          type: 'boolean'
-        }
-      }
-    },
-    {
-      isFabulous: true
-    }
+[
+  '',
+  `"false"`,
+  NaN,
+  null,
+  undefined,
+  { [Symbol.toStringTag]: 'Empty Object' },
+  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+].forEach((input) => {
+  test(
+    'It should invalidate a boolean that does not have the correct type',
+    numberMacro,
+    input,
+    false
   );
-
-  t.is(success, expected);
 });
 
-test('It should invalidate a boolean that does not have the correct type', (t) => {
-  const expected = false;
-  const { success } = match.test(
-    {
-      properties: {
-        isFabulous: {
-          type: 'boolean'
-        }
-      }
-    },
-    {
-      isFabulous: 'true'
-    }
-  );
+const objectMacro = toMacro('object');
 
-  t.is(success, expected);
+[
+  { [Symbol.toStringTag]: 'Empty Object' },
+  { [Symbol.toStringTag]: 'Object with value', property: 'value' },
+  Object.freeze({ [Symbol.toStringTag]: 'Frozen Object with value', property: 'value' }),
+  Object.create({ [Symbol.toStringTag]: 'Created Empty Object' })
+].forEach((input) => {
+  test('It should validate an object that has the correct type', objectMacro, input, true);
 });
 
-test('It should validate an object that has the correct type', (t) => {
-  const expected = true;
-  const { success } = match.test(
-    {
-      properties: {
-        myStuff: {
-          type: 'object'
-        }
-      }
-    },
-    {
-      myStuff: {}
-    }
+[
+  0,
+  '',
+  'string',
+  NaN,
+  Infinity,
+  new Date(),
+  null,
+  undefined,
+  new Map(),
+  new Set(),
+  [],
+  function noop() {}
+].forEach((input, i) => {
+  test(
+    `${i} - It should invalidate an object that does not have the correct type`,
+    objectMacro,
+    input,
+    false
   );
-
-  t.is(success, expected);
 });
 
-test('It should invalidate an object that does not have the correct type', (t) => {
-  const expected = false;
-  const { success } = match.test(
-    {
-      properties: {
-        myStuff: {
-          type: 'object'
-        }
-      }
-    },
-    {
-      myStuff: 4
-    }
-  );
+const arrayMacro = toMacro('array');
 
-  t.is(success, expected);
+[[{ property: 'value' }], [], [''], Array({ length: undefined })].forEach((input, i) => {
+  test(`${i} - It should validate an array that has the correct type`, arrayMacro, input, true);
 });
 
-test('It should validate an array that has the correct type', (t) => {
-  const expected = true;
-  const { success } = match.test(
-    {
-      properties: {
-        myStuff: {
-          type: 'array'
-        }
-      }
-    },
-    {
-      myStuff: [{ laptop: 'Macbook' }]
-    }
+['[]', {}, { length: 1 }, [].keys(), new Set(), new Map()].forEach((input, i) => {
+  test(
+    `${i} - It should invalidate an array that does not have the correct type`,
+    arrayMacro,
+    input,
+    false
   );
-
-  t.is(success, expected);
-});
-
-test('It should invalidate an array that does not have the correct type', (t) => {
-  const expected = false;
-  const { success } = match.test(
-    {
-      properties: {
-        myStuff: {
-          type: 'array'
-        }
-      }
-    },
-    {
-      myStuff: '[]'
-    }
-  );
-
-  t.is(success, expected);
 });
 
 /**
