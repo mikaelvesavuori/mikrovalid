@@ -918,7 +918,7 @@ test('It should work with the demo example', (t) => {
  */
 test('It should fail when missing a required key in the base', (t) => {
   const expected = {
-    error: "Missing the required keys: 'thing'!",
+    error: "Missing the required key: 'thing'!",
     key: '',
     success: false,
     value: {
@@ -943,7 +943,7 @@ test('It should fail when missing a required key in the base', (t) => {
 
 test('It should fail when missing a required key in the root of a nested object', (t) => {
   const expected = {
-    error: "Missing the required keys: 'things'!",
+    error: "Missing the required key: 'things'!",
     key: '',
     success: false,
     value: {
@@ -974,7 +974,7 @@ test('It should fail when missing a required key in the root of a nested object'
 
 test('It should fail when missing a required key in the child of a nested object', (t) => {
   const expected = {
-    error: "Missing the required keys: 'deeperThings'!",
+    error: "Missing the required key: 'deeperThings'!",
     key: '',
     success: false,
     value: {}

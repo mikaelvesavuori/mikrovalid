@@ -154,7 +154,7 @@ export class MikroValid {
         key: '',
         value: input,
         success: false,
-        error: `Missing the required keys: '${missingKeys.join(', ')}'!`
+        error: `Missing the required key: '${missingKeys.join(', ')}'!`
       });
     }
 
