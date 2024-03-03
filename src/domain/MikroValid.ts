@@ -123,7 +123,8 @@ export class MikroValid {
           isAdditionalsOk
         );
 
-        this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
+        if (this.isObject(inputKey))
+          this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
       }
     }
 
@@ -146,13 +147,16 @@ export class MikroValid {
     input: Record<string, any>,
     errors: ValidationError[]
   ) {
-    if (!this.areRequiredKeysPresent(schema, input))
+    if (!this.areRequiredKeysPresent(schema, input)) {
+      const inputKeys = input ? Object.keys(input) : [];
+      const missingKeys = this.findNonOverlappingElements(schema, inputKeys);
       errors.push({
-        key: `${schema}`,
+        key: '',
         value: input,
         success: false,
-        error: `Missing one or more of the required keys: '${schema}'!`
+        error: `Missing the required keys: '${missingKeys.join(', ')}'!`
       });
+    }
 
     return errors;
   }
@@ -173,7 +177,7 @@ export class MikroValid {
           key: `${propertyKeys}`,
           value: inputKeys,
           success: false,
-          error: `Has additional disallowed properties: '${additionals}'!`
+          error: `Has additional disallowed properties: '${additionals.join(', ')}'!`
         });
     }
 
@@ -219,14 +223,12 @@ export class MikroValid {
     results: Result[],
     errors: ValidationError[]
   ) {
-    if (this.isObject(inputKey)) {
-      const nestedObjects = this.getNestedObjects(inputKey);
+    const nestedObjects = this.getNestedObjects(inputKey);
 
-      for (const nested of nestedObjects) {
-        const nextSchema = propertyKey[nested];
-        const nextInput = inputKey[nested];
-        if (nextSchema && nextInput) this.validate(nextSchema, nextInput, results, errors);
-      }
+    for (const nested of nestedObjects) {
+      const nextSchema = propertyKey[nested];
+      const nextInput = inputKey[nested];
+      if (nextSchema && nextInput) this.validate(nextSchema, nextInput, results, errors);
     }
   }
 

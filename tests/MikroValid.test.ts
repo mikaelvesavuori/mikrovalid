@@ -278,6 +278,33 @@ test('It should validate a nested object', (t) => {
   t.is(success, expected);
 });
 
+test('It should invalidate multiple errors separately', (t) => {
+  const expected = 3;
+  const { errors } = match.test(
+    {
+      properties: {
+        box: {
+          type: 'object',
+          first: {
+            type: 'string'
+          },
+          second: {
+            type: 'string'
+          },
+          required: ['first', 'second']
+        },
+        asdf: {
+          type: 'object'
+        }
+      },
+      required: ['box', 'asdf']
+    },
+    { box: { first: '1', _second: '2' } }
+  );
+
+  t.is(errors.length, expected);
+});
+
 /**
  * TYPES
  */
@@ -891,10 +918,12 @@ test('It should work with the demo example', (t) => {
  */
 test('It should fail when missing a required key in the base', (t) => {
   const expected = {
-    error: "Missing one or more of the required keys: 'thing'!",
-    key: 'thing',
+    error: "Missing the required keys: 'thing'!",
+    key: '',
     success: false,
-    value: { something: 123 }
+    value: {
+      something: 123
+    }
   };
 
   const result = match.test(
@@ -914,8 +943,8 @@ test('It should fail when missing a required key in the base', (t) => {
 
 test('It should fail when missing a required key in the root of a nested object', (t) => {
   const expected = {
-    error: "Missing one or more of the required keys: 'things'!",
-    key: 'things',
+    error: "Missing the required keys: 'things'!",
+    key: '',
     success: false,
     value: {
       dings: {}
@@ -945,8 +974,8 @@ test('It should fail when missing a required key in the root of a nested object'
 
 test('It should fail when missing a required key in the child of a nested object', (t) => {
   const expected = {
-    error: "Missing one or more of the required keys: 'deeperThings'!",
-    key: 'deeperThings',
+    error: "Missing the required keys: 'deeperThings'!",
+    key: '',
     success: false,
     value: {}
   };
