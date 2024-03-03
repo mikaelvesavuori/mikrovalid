@@ -33,7 +33,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: mikaelvesavuori/mikromatch
+          slug: mikaelvesavuori/mikrovalid
 
       - name: Send coverage report with Code Climate
         uses: paambaati/codeclimate-action@v5.0.0
