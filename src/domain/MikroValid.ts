@@ -113,7 +113,9 @@ export class MikroValid {
         errors
       );
 
-      if (inputKey) {
+      this.handleValidation(key, inputKey, propertyKey, results);
+
+      if (this.isDefined(inputKey)) {
         errors = this.checkForDisallowedProperties(
           Object.keys(inputKey),
           Object.keys(propertyKey),
@@ -121,12 +123,19 @@ export class MikroValid {
           isAdditionalsOk
         );
 
-        this.handleValidation(key, inputKey as string, propertyKey, results);
         this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
       }
     }
 
     return { results, errors };
+  }
+
+  /**
+   * @description Checks if a value is actually defined as a non-null value.
+   */
+  private isDefined(value: unknown) {
+    if (value || typeof value === 'number') return true;
+    return false;
   }
 
   /**
@@ -181,10 +190,10 @@ export class MikroValid {
     propertyKey: Record<string, any>,
     results: Result[]
   ) {
-    if (this.isArray(inputKey)) {
-      const validation = this.validateProperty(key, propertyKey, inputKey);
-      results.push(validation);
+    const validation = this.validateProperty(key, propertyKey, inputKey);
+    results.push(validation);
 
+    if (this.isArray(inputKey)) {
       // @ts-ignore - inputKey is an array
       inputKey.forEach((arrayItem: ValidationValue) => {
         const validation = this.validateProperty(key, propertyKey['items'] || [], arrayItem);
@@ -197,9 +206,6 @@ export class MikroValid {
         const validation = this.validateProperty(key, propertyKey[innerKey], inputKey[innerKey]);
         results.push(validation);
       });
-    } else {
-      const validation = this.validateProperty(key, propertyKey, inputKey);
-      results.push(validation);
     }
   }
 
@@ -345,7 +351,13 @@ export class MikroValid {
    * @description Checks if input is an object.
    */
   private isObject(input: any) {
-    return typeof input === 'object' && !Array.isArray(input) && input !== null;
+    return (
+      input !== null &&
+      !this.isArray(input) &&
+      typeof input === 'object' &&
+      input instanceof Object &&
+      Object.prototype.toString.call(input) === '[object Object]' // This will solve many validation cases, but will break Symbol support
+    );
   }
 
   /**
