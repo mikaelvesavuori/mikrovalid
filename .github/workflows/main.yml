@@ -31,9 +31,3 @@ jobs:
 
       - name: Test
         run: npm test
-
-      - name: Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: mikaelvesavuori/mikrovalid
