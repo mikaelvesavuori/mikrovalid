@@ -123,8 +123,7 @@ export class MikroValid {
           isAdditionalsOk
         );
 
-        if (this.isObject(inputKey))
-          this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
+        this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
       }
     }
 
@@ -135,7 +134,7 @@ export class MikroValid {
    * @description Checks if a value is actually defined as a non-null value.
    */
   private isDefined(value: unknown) {
-    if (value || typeof value === 'number') return true;
+    if (!!value) return true;
     return false;
   }
 
@@ -223,12 +222,14 @@ export class MikroValid {
     results: Result[],
     errors: ValidationError[]
   ) {
-    const nestedObjects = this.getNestedObjects(inputKey);
+    if (this.isObject(inputKey)) {
+      const nestedObjects = this.getNestedObjects(inputKey);
 
-    for (const nested of nestedObjects) {
-      const nextSchema = propertyKey[nested];
-      const nextInput = inputKey[nested];
-      if (nextSchema && nextInput) this.validate(nextSchema, nextInput, results, errors);
+      for (const nested of nestedObjects) {
+        const nextSchema = propertyKey[nested];
+        const nextInput = inputKey[nested];
+        if (nextSchema && nextInput) this.validate(nextSchema, nextInput, results, errors);
+      }
     }
   }
 

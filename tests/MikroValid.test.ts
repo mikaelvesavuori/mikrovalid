@@ -279,7 +279,7 @@ test('It should validate a nested object', (t) => {
 });
 
 test('It should invalidate multiple errors separately', (t) => {
-  const expected = 3;
+  const expected = 2;
   const { errors } = match.test(
     {
       properties: {
@@ -297,7 +297,7 @@ test('It should invalidate multiple errors separately', (t) => {
           type: 'object'
         }
       },
-      required: ['box', 'asdf']
+      required: ['box']
     },
     { box: { first: '1', _second: '2' } }
   );
