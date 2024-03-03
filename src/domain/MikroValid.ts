@@ -205,8 +205,12 @@ export class MikroValid {
     } else if (this.isObject(inputKey)) {
       const keys = Object.keys(inputKey);
       keys.forEach((innerKey: string) => {
-        // @ts-ignore - innerKey will be an object
-        const validation = this.validateProperty(key, propertyKey[innerKey], inputKey[innerKey]);
+        const validation = this.validateProperty(
+          innerKey,
+          propertyKey[innerKey],
+          // @ts-ignore - innerKey will be an object
+          inputKey[innerKey]
+        );
         results.push(validation);
       });
     }

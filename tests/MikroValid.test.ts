@@ -279,7 +279,17 @@ test('It should validate a nested object', (t) => {
 });
 
 test('It should invalidate multiple errors separately', (t) => {
-  const expected = 2;
+  const expected = [
+    {
+      key: '',
+      value: { first: 1, third: 3 },
+      success: false,
+      error: "Missing the required key: 'second'!"
+    },
+    { key: 'first', value: 1, success: false, error: 'Invalid type' },
+    { key: 'third', value: 3, success: false, error: 'Invalid type' }
+  ];
+
   const { errors } = match.test(
     {
       properties: {
@@ -291,18 +301,18 @@ test('It should invalidate multiple errors separately', (t) => {
           second: {
             type: 'string'
           },
-          required: ['first', 'second']
-        },
-        asdf: {
-          type: 'object'
+          third: {
+            type: 'string'
+          },
+          required: ['first', 'second', 'third']
         }
       },
       required: ['box']
     },
-    { box: { first: '1', _second: '2' } }
+    { box: { first: 1, third: 3 } }
   );
 
-  t.is(errors.length, expected);
+  t.deepEqual(errors, expected);
 });
 
 /**
