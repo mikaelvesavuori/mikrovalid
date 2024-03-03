@@ -67,7 +67,7 @@ export class MikroValid {
   /**
    * @description Aggregate errors into a flat array.
    */
-  private compileErrors(results: Result[], errors: ValidationError[]) {
+  private compileErrors(results: Result[], errors: ValidationError[]) : ValidationError[] {
     const resultErrors = results.filter((result: Result) => result.success === false);
     return [...errors, resultErrors].flatMap((error: any) => error);
   }
