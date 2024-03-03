@@ -25,6 +25,8 @@ export type ValidationValue =
   | string[]
   | number
   | number[]
+  | boolean
+  | boolean[]
   | Record<string, any>
   | Record<string, any>[];
 

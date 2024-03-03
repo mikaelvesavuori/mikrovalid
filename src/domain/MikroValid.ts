@@ -69,7 +69,7 @@ export class MikroValid {
    */
   private compileErrors(results: Result[], errors: ValidationError[]): ValidationError[] {
     const resultErrors = results.filter((result: Result) => result.success === false);
-    return [...errors, resultErrors].flatMap((error: any) => error);
+    return [...errors, resultErrors].flatMap((error: Result | Result[]) => error);
   }
 
   /**
@@ -86,7 +86,7 @@ export class MikroValid {
    * all fields/properties and any nested objects.
    */
   private validate(
-    schema: Record<string, any>,
+    schema: ValidationSchema,
     input: Record<string, any>,
     results: Result[] = [],
     errors: ValidationError[] = []
@@ -96,14 +96,14 @@ export class MikroValid {
 
     errors = this.checkForRequiredKeysErrors(schema.required || [], input, errors);
     errors = this.checkForDisallowedProperties(
-      isAdditionalsOk,
       Object.keys(input),
       Object.keys(properties),
-      errors
+      errors,
+      isAdditionalsOk
     );
 
     for (const key in properties) {
-      const propertyKey = properties[key];
+      const propertyKey = properties[key] as Record<string, any>;
       const inputKey: ValidationValue = input[key];
       const isAdditionalsOk = propertyKey.additionalProperties ?? true;
 
@@ -115,10 +115,10 @@ export class MikroValid {
 
       if (inputKey) {
         errors = this.checkForDisallowedProperties(
-          isAdditionalsOk,
           Object.keys(inputKey),
           Object.keys(propertyKey),
-          errors
+          errors,
+          isAdditionalsOk
         );
 
         this.handleValidation(key, inputKey as string, propertyKey, results);
@@ -152,10 +152,10 @@ export class MikroValid {
    * @description Checks if there are disallowed properties and adds errors if needed.
    */
   private checkForDisallowedProperties(
-    isAdditionalsOk: boolean,
     inputKeys: string[],
     propertyKeys: string[],
-    errors: ValidationError[]
+    errors: ValidationError[],
+    isAdditionalsOk: boolean
   ) {
     if (!isAdditionalsOk) {
       const additionals = this.findNonOverlappingElements(inputKeys, propertyKeys);
@@ -351,7 +351,7 @@ export class MikroValid {
   /**
    * @description Checks if input is an array.
    */
-  private isArray(input: any) {
+  private isArray(input: unknown) {
     return Array.isArray(input);
   }
 
