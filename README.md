@@ -53,9 +53,9 @@ const schema = {
         type: 'number'
       },
       required: ['office']
-    }
+    },
+    required: ['personal', 'work']
   },
-  required: ['personal', 'work']
 };
 
 const input = {
