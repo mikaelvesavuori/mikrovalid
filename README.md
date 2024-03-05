@@ -99,7 +99,7 @@ The general shape it uses is:
       "type": "string"
     }
   },
-  "required": ["name"]
+  "required": ["username"]
 }
 ```
 

@@ -16,20 +16,20 @@ export class MikroValid {
    * takes care of the rest.
    *
    * @example
-   * import { MikroValid } from './MikroValid';
+   * import { MikroValid } from 'mikrovalid';
    *
    * const mikrovalid = new MikroValid();
    *
    * const schema = {
    *   properties: {
    *     personal: {
-   *       name: 'string',
+   *       name: { type: 'string' },
    *       required: ['name']
    *     },
    *     work: {
-   *       office: 'string',
-   *       currency: 'string',
-   *       salary: 'number',
+   *       office: { type: 'string' },
+   *       currency: { type: 'string' },
+   *       salary: { type: 'number' },
    *       required: ['office']
    *     },
    *     required: ['personal', 'work']
@@ -47,7 +47,7 @@ export class MikroValid {
    *   }
    * };
    *
-   * const { valid, errors } = mikrovalid.test(schema, input);
+   * const { success, errors } = mikrovalid.test(schema, input);
    *
    * console.log('Was the test successful?', success);
    */
@@ -69,7 +69,7 @@ export class MikroValid {
    */
   private compileErrors(results: Result[], errors: ValidationError[]): ValidationError[] {
     const resultErrors = results.filter((result: Result) => result.success === false);
-    return [...errors, resultErrors].flatMap((error: Result | Result[]) => error);
+    return [...errors, ...resultErrors].flatMap((error: Result) => error);
   }
 
   /**

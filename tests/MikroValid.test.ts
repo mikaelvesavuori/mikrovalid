@@ -886,25 +886,17 @@ test('It should work with the demo example', (t) => {
   const schema = {
     properties: {
       personal: {
-        name: {
-          type: 'string'
-        },
+        name: { type: 'string' },
         required: ['name']
       },
       work: {
-        office: {
-          type: 'string'
-        },
-        currency: {
-          type: 'string'
-        },
-        salary: {
-          type: 'number'
-        },
+        office: { type: 'string' },
+        currency: { type: 'string' },
+        salary: { type: 'number' },
         required: ['office']
-      }
-    },
-    required: ['personal', 'work']
+      },
+      required: ['personal', 'work']
+    }
   };
 
   const input = {
