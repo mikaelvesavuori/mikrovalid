@@ -95,9 +95,9 @@ The general shape it uses is:
   "properties": {
     "username": {
       "type": "string"
-    }
-  },
-  "required": ["username"]
+    },
+    "required": ["username"]
+  }
 }
 ```
 
@@ -279,9 +279,9 @@ This example shows 3 levels of nesting with objects.
           "something": "number"
         }
       }
-    }
+    },
+    "required": ["things"]
   },
-  "required": ["things"]
 }
 ```
 

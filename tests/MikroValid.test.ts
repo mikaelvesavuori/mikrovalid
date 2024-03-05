@@ -1003,9 +1003,9 @@ test('It should fail when missing a required key in the child of a nested object
               something: { type: 'number' }
             }
           }
-        }
-      },
-      required: ['things']
+        },
+        required: ['things']
+      }
     },
     {
       things: {
