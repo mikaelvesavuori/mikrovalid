@@ -328,6 +328,7 @@ You can provide your own regular expressions to match for.
 {
   "properties": {
     "runtime": {
+      "type": "string",
       "matchesPattern": /^(nodejs20|python3.7)$/
     }
   }

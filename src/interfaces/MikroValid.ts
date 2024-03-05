@@ -78,8 +78,8 @@ export interface RootDefinition<S extends { properties: any }> {
 export type FirstLevelDefinition<S> = RootProperties<
   Extract<ExcludeFromAllTypes<S, keyof S>, string>
 > & {
-  [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
-};
+    [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
+  };
 
 export type SchemaDefinition<S> = AllTypes<Extract<ExcludeFromAllTypes<S, keyof S>, string>> & {
   [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;

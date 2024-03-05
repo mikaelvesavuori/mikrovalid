@@ -364,7 +364,7 @@ const stringMacro = toMacro('string');
   Infinity,
   new Set(),
   new Map(),
-  () => {},
+  () => { },
   null,
   undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
@@ -403,7 +403,7 @@ const numberMacro = toMacro('number');
   new Date(),
   new Set(),
   new Map(),
-  () => {},
+  () => { },
   null,
   undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
@@ -458,7 +458,7 @@ const objectMacro = toMacro('object');
   new Map(),
   new Set(),
   [],
-  function noop() {}
+  function noop() { }
 ].forEach((input, i) => {
   test(
     `${i} - It should invalidate an object that does not have the correct type`,
