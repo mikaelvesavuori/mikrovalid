@@ -81,9 +81,7 @@ The `errors` object includes an aggregation of any errors, both those relating t
 Since version `1.0.3` both error formats have the same shape:
 
 ```json
-[
-  { "key": "blip", "value": 123, "success": false, "error": "Invalid type" }
-]
+[{ "key": "blip", "value": 123, "success": false, "error": "Invalid type" }]
 ```
 
 ### Using schemas
@@ -119,6 +117,8 @@ A valid input for this particular schema is:
 
 By default, unknown properties will be allowed and valid. Setting `additionalProperties` to `false` enables you to disallow any unlisted properties.
 
+Since version `1.0.10` it _only_ works in the direct scope of its location, as per below:
+
 ```json
 {
   "properties": {
@@ -130,9 +130,9 @@ By default, unknown properties will be allowed and valid. Setting `additionalPro
     },
     "third": {
       "type": "string"
-    }
-  },
-  "additionalProperties": false
+    },
+    "additionalProperties": false
+  }
 }
 ```
 
@@ -149,7 +149,7 @@ A payload like this...
 
 ...would therefore break the validation.
 
-The same can be done with nested objects:
+The same can be done with nested objects, by setting `additionalProperties` in the scope of the object:
 
 ```json
 {
@@ -175,7 +175,7 @@ So this would not work:
   "blip": "beep bloop",
   "inside": {
     "thing": "scary monster",
-    "somethingElse": "...?"
+    "somethingThatIsNotAllowed": "...?"
   }
 }
 ```
@@ -183,6 +183,23 @@ So this would not work:
 #### Required
 
 For each level of nesting, including within objects, a `required` key with an array of strings _may_ be used to describe properties that must exist at that location.
+
+Even the lowest-level `required` will be _within_ the `properties` key after version `1.0.10`.
+
+This example requires both the `personal_data` object, as well as the inner `name` string:
+
+```json
+{
+  "properties": {
+    "personal_data": {
+      "type": "object",
+      "name": { "type": "string" },
+      "required": ["name"]
+    },
+    "required": ["personal_data"]
+  }
+}
+```
 
 #### Types
 

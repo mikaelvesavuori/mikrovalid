@@ -12,6 +12,20 @@ export type ValidationResult = {
 
 export type ValidationFormat = 'alphanumeric' | 'date' | 'email' | 'hexColor' | 'numeric' | 'url';
 
+export type ValidationValue =
+  | string
+  | string[]
+  | number
+  | number[]
+  | boolean
+  | boolean[]
+  | Record<string, any>
+  | Record<string, any>[];
+
+export type ValidationTypes = 'string' | 'number' | 'boolean' | 'object' | 'array';
+
+export type ValidationError = Result;
+
 interface RootProperties<Required> {
   required?: Array<Required>;
   additionalProperties?: boolean;
@@ -84,17 +98,3 @@ export type FirstLevelDefinition<S> = RootProperties<
 export type SchemaDefinition<S> = AllTypes<Extract<ExcludeFromAllTypes<S, keyof S>, string>> & {
   [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
 };
-
-export type ValidationValue =
-  | string
-  | string[]
-  | number
-  | number[]
-  | boolean
-  | boolean[]
-  | Record<string, any>
-  | Record<string, any>[];
-
-export type ValidationTypes = 'string' | 'number' | 'boolean' | 'object' | 'array';
-
-export type ValidationError = Result;

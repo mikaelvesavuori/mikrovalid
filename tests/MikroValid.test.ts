@@ -266,9 +266,9 @@ test('It should validate a nested object', (t) => {
           box: {
             type: 'string'
           }
-        }
-      },
-      required: ['boxes']
+        },
+        required: ['boxes']
+      }
     },
     {
       boxes: { box: 'stuff' }
@@ -305,9 +305,9 @@ test('It should invalidate multiple errors separately', (t) => {
             type: 'string'
           },
           required: ['first', 'second', 'third']
-        }
-      },
-      required: ['box']
+        },
+        required: ['box']
+      }
     },
     { box: { first: 1, third: 3 } }
   );
@@ -728,9 +728,9 @@ test('It should validate an input with additional properties that are allowed', 
         },
         third: {
           type: 'string'
-        }
-      },
-      additionalProperties: true
+        },
+        additionalProperties: true
+      }
     },
     {
       first: 'the first',
@@ -828,9 +828,9 @@ test('It should validate a Flow Component', (t) => {
         },
         code: {
           type: 'string'
-        }
-      },
-      required: ['component', 'memory', 'architecture', 'runtime', 'code']
+        },
+        required: ['component', 'memory', 'architecture', 'runtime', 'code']
+      }
     },
     {
       component: 'function',
@@ -871,9 +871,9 @@ test('It should validate a App Component', (t) => {
           type: 'string',
           minLength: 1,
           maxLength: 200
-        }
-      },
-      required: ['component', 'name', 'imageSource', 'url', 'altText']
+        },
+        required: ['component', 'name', 'imageSource', 'url', 'altText']
+      }
     },
     {
       component: 'image',

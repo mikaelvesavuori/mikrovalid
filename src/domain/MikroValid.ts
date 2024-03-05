@@ -110,7 +110,7 @@ export class MikroValid {
     for (const key in schema) {
       const propertyKey = schema[key];
       const inputKey: ValidationValue = input[key];
-      const isAdditionalsOk = propertyKey.additionalProperties ?? true;
+      const isInnerAdditionalsOk = propertyKey.additionalProperties ?? true;
 
       errors = this.checkForRequiredKeysErrors(
         propertyKey.required || [],
@@ -125,7 +125,7 @@ export class MikroValid {
           Object.keys(inputKey),
           Object.keys(propertyKey),
           errors,
-          isAdditionalsOk
+          isInnerAdditionalsOk
         );
 
         this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
