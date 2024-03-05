@@ -364,7 +364,7 @@ const stringMacro = toMacro('string');
   Infinity,
   new Set(),
   new Map(),
-  () => { },
+  () => {},
   null,
   undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
@@ -403,7 +403,7 @@ const numberMacro = toMacro('number');
   new Date(),
   new Set(),
   new Map(),
-  () => { },
+  () => {},
   null,
   undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
@@ -458,7 +458,7 @@ const objectMacro = toMacro('object');
   new Map(),
   new Set(),
   [],
-  function noop() { }
+  function noop() {}
 ].forEach((input, i) => {
   test(
     `${i} - It should invalidate an object that does not have the correct type`,
@@ -756,9 +756,9 @@ test('It should invalidate an input with additional properties that are disallow
         },
         third: {
           type: 'string'
-        }
-      },
-      additionalProperties: false
+        },
+        additionalProperties: false
+      }
     },
     {
       first: 'the first',
@@ -810,6 +810,7 @@ test('It should validate a Flow Component', (t) => {
     {
       properties: {
         component: {
+          type: 'string',
           matchesPattern: /^(function|queue|storage|event)$/
         },
         memory: {
@@ -818,9 +819,11 @@ test('It should validate a Flow Component', (t) => {
           maxValue: 3008
         },
         architecture: {
+          type: 'string',
           matchesPattern: /^(arm|x86)$/
         },
         runtime: {
+          type: 'string',
           matchesPattern: /^(nodejs20|python3\.7)$/
         },
         code: {
@@ -847,6 +850,7 @@ test('It should validate a App Component', (t) => {
     {
       properties: {
         component: {
+          type: 'string',
           matchesPattern: /^(list|button|text|image|dropdown)$/
         },
         name: {
@@ -855,6 +859,7 @@ test('It should validate a App Component', (t) => {
           maxLength: 50
         },
         imageSource: {
+          type: 'string',
           matchesPattern: /^(online|local)$/
         },
         url: {
@@ -883,34 +888,35 @@ test('It should validate a App Component', (t) => {
 });
 
 test('It should work with the demo example', (t) => {
-  const schema = {
-    properties: {
+  const { success } = match.test(
+    {
+      properties: {
+        personal: {
+          type: 'object',
+          name: { type: 'string' },
+          required: ['name']
+        },
+        work: {
+          type: 'object',
+          office: { type: 'string' },
+          currency: { type: 'string' },
+          salary: { type: 'number' },
+          required: ['office']
+        },
+        required: ['personal', 'work']
+      }
+    },
+    {
       personal: {
-        name: { type: 'string' },
-        required: ['name']
+        name: 'Sam Person'
       },
       work: {
-        office: { type: 'string' },
-        currency: { type: 'string' },
-        salary: { type: 'number' },
-        required: ['office']
-      },
-      required: ['personal', 'work']
+        office: 'London',
+        currency: 'GBP',
+        salary: 10000
+      }
     }
-  };
-
-  const input = {
-    personal: {
-      name: 'Sam Person'
-    },
-    work: {
-      office: 'London',
-      currency: 'GBP',
-      salary: 10000
-    }
-  };
-
-  const { success } = match.test(schema, input);
+  );
 
   t.is(success, true);
 });
@@ -933,9 +939,9 @@ test('It should fail when missing a required key in the base', (t) => {
       properties: {
         thing: {
           type: 'string'
-        }
-      },
-      required: ['thing']
+        },
+        required: ['thing']
+      }
     },
     { something: 123 }
   );
@@ -962,9 +968,9 @@ test('It should fail when missing a required key in the root of a nested object'
           nestedThings: {
             type: 'string'
           }
-        }
-      },
-      required: ['things']
+        },
+        required: ['things']
+      }
     },
     {
       dings: {}
@@ -994,7 +1000,7 @@ test('It should fail when missing a required key in the child of a nested object
             deeperThings: {
               type: 'object',
               required: ['something'],
-              something: 'number'
+              something: { type: 'number' }
             }
           }
         }
@@ -1014,12 +1020,14 @@ test('It should fail when missing a required key in the child of a nested object
 test('It should throw an error if there is no input', (t) => {
   const expected = 'Error';
   const error: any = t.throws(() => {
-    // @ts-ignore
-    match.test({
-      properties: {
-        money: 'number'
-      }
-    });
+    match.test(
+      {
+        properties: {
+          money: { type: 'number' }
+        }
+      },
+      undefined as any
+    );
   });
 
   t.is(error.name, expected);

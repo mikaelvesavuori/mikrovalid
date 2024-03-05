@@ -1,9 +1,12 @@
 import {
+  FirstLevelDefinition,
   Result,
+  RootDefinition,
+  SchemaDefinition,
   ValidationError,
-  ValidationProperties,
+  ValidationFormat,
   ValidationResult,
-  ValidationSchema,
+  ValidationTypes,
   ValidationValue
 } from '../interfaces/MikroValid';
 
@@ -51,10 +54,13 @@ export class MikroValid {
    *
    * console.log('Was the test successful?', success);
    */
-  public test(schema: ValidationSchema, input: Record<string, any>) {
+  public test<Schema extends { properties: any }>(
+    schema: Schema & RootDefinition<Schema>,
+    input: Record<string, any>
+  ) {
     if (!input) throw new Error('Missing input!');
 
-    const { results, errors } = this.validate(schema, input);
+    const { results, errors } = this.validate(schema.properties, input);
     const aggregatedErrors = this.compileErrors(results, errors);
     const success = this.isSuccessful(results, aggregatedErrors);
 
@@ -85,13 +91,13 @@ export class MikroValid {
    * @description This is the main recursive loop that checks
    * all fields/properties and any nested objects.
    */
-  private validate(
-    schema: ValidationSchema,
+  private validate<Schema extends Record<string, any>>(
+    schema: FirstLevelDefinition<Schema>,
     input: Record<string, any>,
     results: Result[] = [],
     errors: ValidationError[] = []
   ) {
-    const properties = schema.properties || schema;
+    const properties = schema;
     const isAdditionalsOk = schema.additionalProperties ?? true;
 
     errors = this.checkForRequiredKeysErrors(schema.required || [], input, errors);
@@ -103,7 +109,7 @@ export class MikroValid {
     );
 
     for (const key in properties) {
-      const propertyKey = properties[key] as Record<string, any>;
+      const propertyKey = properties[key];
       const inputKey: ValidationValue = input[key];
       const isAdditionalsOk = propertyKey.additionalProperties ?? true;
 
@@ -187,19 +193,19 @@ export class MikroValid {
    * @description Runs validation in the right way, based on whether the
    * input is an object or not.
    */
-  private handleValidation(
+  private handleValidation<Schema extends Record<string, any>>(
     key: string,
     inputKey: ValidationValue,
-    propertyKey: Record<string, any>,
+    propertyKey: SchemaDefinition<Schema>,
     results: Result[]
   ) {
     const validation = this.validateProperty(key, propertyKey, inputKey);
     results.push(validation);
 
-    if (this.isArray(inputKey)) {
+    if (this.isArray(inputKey) && propertyKey.items != null) {
       // @ts-ignore - inputKey is an array
       inputKey.forEach((arrayItem: ValidationValue) => {
-        const validation = this.validateProperty(key, propertyKey['items'] || [], arrayItem);
+        const validation = this.validateProperty(key, propertyKey.items!, arrayItem);
         results.push(validation);
       });
     } else if (this.isObject(inputKey)) {
@@ -263,9 +269,9 @@ export class MikroValid {
   /**
    * @description Controller for validation purposes. Returns back a more comprehensive validation object.
    */
-  private validateProperty(
+  private validateProperty<Schema>(
     key: string,
-    properties: ValidationProperties,
+    properties: SchemaDefinition<Schema>,
     value: ValidationValue
   ): Result {
     const { success, error } = this.validateInput(properties, value);
@@ -280,46 +286,45 @@ export class MikroValid {
   /**
    * @description Performs field-level validation.
    */
-  private validateInput(
-    properties: ValidationProperties,
+  private validateInput<Schema extends Record<string, any>>(
+    properties: SchemaDefinition<Schema>,
     match: ValidationValue
   ): ValidationResult {
     if (properties) {
       const checks = [
         {
           condition: () => properties['type'],
-          validator: () => this.isCorrectType(properties['type'] as string, match),
+          validator: () => this.isCorrectType(properties['type']!, match),
           error: 'Invalid type'
         },
         {
           condition: () => properties['format'],
-          validator: () => this.isCorrectFormat(properties['format'] as string, match as string),
+          validator: () => this.isCorrectFormat(properties['format']!, match as string),
           error: 'Invalid format'
         },
         {
           condition: () => properties['minLength'],
-          validator: () => this.isMinimumLength(properties['minLength'] as number, match),
+          validator: () => this.isMinimumLength(properties['minLength']!, match),
           error: 'Length too short'
         },
         {
           condition: () => properties['maxLength'],
-          validator: () => this.isMaximumLength(properties['maxLength'] as number, match),
+          validator: () => this.isMaximumLength(properties['maxLength']!, match),
           error: 'Length too long'
         },
         {
           condition: () => properties['minValue'],
-          validator: () => this.isMinimumValue(properties['minValue'] as number, match as number),
+          validator: () => this.isMinimumValue(properties['minValue']!, match as number),
           error: 'Value too small'
         },
         {
           condition: () => properties['maxValue'],
-          validator: () => this.isMaximumValue(properties['maxValue'] as number, match as number),
+          validator: () => this.isMaximumValue(properties['maxValue']!, match as number),
           error: 'Value too large'
         },
         {
           condition: () => properties['matchesPattern'],
-          validator: () =>
-            this.matchesPattern(properties['matchesPattern'] as string, match as string),
+          validator: () => this.matchesPattern(properties['matchesPattern']!, match as string),
           error: 'Pattern does not match'
         }
       ];
@@ -339,7 +344,7 @@ export class MikroValid {
   /**
    * @description Checks whether or not a type is correct.
    */
-  private isCorrectType(expected: string, input: ValidationValue) {
+  private isCorrectType(expected: ValidationTypes, input: ValidationValue) {
     switch (expected) {
       case 'string':
         return typeof input === 'string';
@@ -385,7 +390,7 @@ export class MikroValid {
    * - `numeric`
    * - `url`
    */
-  private isCorrectFormat(expected: string, input: string) {
+  private isCorrectFormat(expected: ValidationFormat, input: string) {
     switch (expected) {
       case 'alphanumeric': {
         return new RegExp(/^[a-zA-Z0-9]+$/).test(input);
@@ -441,7 +446,7 @@ export class MikroValid {
   /**
    * @description Checks whether a string matches against a user-provided regular expression.
    */
-  private matchesPattern(pattern: string, input: string) {
+  private matchesPattern(pattern: RegExp, input: string) {
     return new RegExp(pattern).test(input);
   }
 }
