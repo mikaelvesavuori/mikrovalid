@@ -98,8 +98,9 @@ export class MikroValid {
     errors: ValidationError[] = []
   ) {
     const isAdditionalsOk = schema.additionalProperties ?? true;
+    const requiredKeys = schema.required || [];
 
-    errors = this.checkForRequiredKeysErrors(schema.required || [], input, errors);
+    errors = this.checkForRequiredKeysErrors(requiredKeys, input, errors);
     errors = this.checkForDisallowedProperties(
       Object.keys(input),
       Object.keys(schema),
@@ -118,9 +119,9 @@ export class MikroValid {
         errors
       );
 
-      this.handleValidation(key, inputKey, propertyKey, results);
-
       if (this.isDefined(inputKey)) {
+        this.handleValidation(key, inputKey, propertyKey, results);
+
         errors = this.checkForDisallowedProperties(
           Object.keys(inputKey),
           Object.keys(propertyKey),

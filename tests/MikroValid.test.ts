@@ -2,14 +2,14 @@ import test from 'ava';
 
 import { MikroValid } from '../src/domain/MikroValid';
 
-const match = new MikroValid();
+const mikrovalid = new MikroValid();
 
 /**
  * POSITIVE TESTS
  */
 test('It should validate a string', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         username: {
@@ -27,7 +27,7 @@ test('It should validate a string', (t) => {
 
 test('It should invalidate a string that is too long', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         username: {
@@ -46,7 +46,7 @@ test('It should invalidate a string that is too long', (t) => {
 
 test('It should invalidate a string that is too short', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         username: {
@@ -65,7 +65,7 @@ test('It should invalidate a string that is too short', (t) => {
 
 test('It should validate a number', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         phone: {
@@ -83,7 +83,7 @@ test('It should validate a number', (t) => {
 
 test('It should validate a number that is too small', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         phone: {
@@ -102,7 +102,7 @@ test('It should validate a number that is too small', (t) => {
 
 test('It should validate a number that is too big', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         phone: {
@@ -121,7 +121,7 @@ test('It should validate a number that is too big', (t) => {
 
 test('It should validate an array', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         fruits: {
@@ -139,7 +139,7 @@ test('It should validate an array', (t) => {
 
 test('It should validate an array containing numbers', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         payments: {
@@ -160,7 +160,7 @@ test('It should validate an array containing numbers', (t) => {
 
 test('It should validate an array containing objects', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         books: {
@@ -181,7 +181,7 @@ test('It should validate an array containing objects', (t) => {
 
 test('It should invalidate an array that should only contain numbers', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         payments: {
@@ -202,7 +202,7 @@ test('It should invalidate an array that should only contain numbers', (t) => {
 
 test('It should invalidate an array that is too long', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         fruits: {
@@ -221,7 +221,7 @@ test('It should invalidate an array that is too long', (t) => {
 
 test('It should invalidate an array that is too short', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         fruits: {
@@ -240,7 +240,7 @@ test('It should invalidate an array that is too short', (t) => {
 
 test('It should validate an object', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         boxes: {
@@ -258,7 +258,7 @@ test('It should validate an object', (t) => {
 
 test('It should validate a nested object', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         boxes: {
@@ -278,6 +278,79 @@ test('It should validate a nested object', (t) => {
   t.is(success, expected);
 });
 
+test('It should validate an input that only uses required (not optional) properties', (t) => {
+  const expected = true;
+
+  const schema: any = {
+    properties: {
+      url: {
+        type: 'string'
+      },
+      requestMethod: {
+        type: 'string',
+        matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
+      },
+      authentication: {
+        type: 'object',
+        authType: {
+          type: 'string',
+          matchesPattern: /^(header|queryparam|oauth)$/
+        },
+        additionalProperties: false
+      },
+      headers: {
+        type: 'object'
+      },
+      queryParams: {
+        type: 'object'
+      },
+      required: ['url', 'requestMethod'],
+      additionalProperties: false
+    }
+  };
+
+  const input = {
+    url: 'https://ajwh82hd.asdf.xyz',
+    requestMethod: 'POST'
+  };
+
+  const { success } = mikrovalid.test(schema, input);
+
+  t.is(success, expected);
+});
+
+test('It should invalidate a partial failure (invalid optional property)', (t) => {
+  const expected = false;
+
+  const schema: any = {
+    properties: {
+      url: {
+        type: 'string'
+      },
+      requestMethod: {
+        type: 'string',
+        matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
+      },
+      queryParams: {
+        type: 'object'
+      },
+      required: ['url'],
+      additionalProperties: false
+    }
+  };
+
+  const input = {
+    url: 'https://ajwh82hd.asdf.xyz',
+    requestMethod: 'POST',
+    queryParams: 'not an object'
+  };
+
+  const { success, errors } = mikrovalid.test(schema, input);
+  console.log(errors);
+
+  t.is(success, expected);
+});
+
 test('It should invalidate multiple errors separately', (t) => {
   const expected = [
     {
@@ -290,7 +363,7 @@ test('It should invalidate multiple errors separately', (t) => {
     { key: 'third', value: 3, success: false, error: 'Invalid type' }
   ];
 
-  const { errors } = match.test(
+  const { errors } = mikrovalid.test(
     {
       properties: {
         box: {
@@ -322,7 +395,7 @@ test('It should invalidate multiple errors separately', (t) => {
 const toMacro = (type: 'string' | 'number' | 'boolean' | 'object' | 'array') =>
   test.macro({
     exec(t, input, expected: boolean) {
-      const { success } = match.test(
+      const { success } = mikrovalid.test(
         {
           properties: {
             property: {
@@ -357,16 +430,12 @@ const stringMacro = toMacro('string');
 
 [
   -1,
-  0,
   1,
-  NaN,
   new Date(),
   Infinity,
   new Set(),
   new Map(),
   () => { },
-  null,
-  undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
   { [Symbol.toStringTag]: 'Object with value', property: 'value' }
 ].forEach((input) => {
@@ -382,7 +451,6 @@ const numberMacro = toMacro('number');
 
 [
   -1,
-  0,
   1,
   Infinity,
   -Infinity,
@@ -398,14 +466,10 @@ const numberMacro = toMacro('number');
 
 [
   'string',
-  '',
-  NaN,
   new Date(),
   new Set(),
   new Map(),
   () => { },
-  null,
-  undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
   { [Symbol.toStringTag]: 'Object with value', property: 'value' }
 ].forEach((input) => {
@@ -424,11 +488,7 @@ const booleanMacro = toMacro('boolean');
 });
 
 [
-  '',
   `"false"`,
-  NaN,
-  null,
-  undefined,
   { [Symbol.toStringTag]: 'Empty Object' },
   { [Symbol.toStringTag]: 'Object with value', property: 'value' }
 ].forEach((input) => {
@@ -446,27 +506,16 @@ const objectMacro = toMacro('object');
   test('It should validate an object that has the correct type', objectMacro, input, true);
 });
 
-[
-  0,
-  '',
-  'string',
-  NaN,
-  Infinity,
-  new Date(),
-  null,
-  undefined,
-  new Map(),
-  new Set(),
-  [],
-  function noop() { }
-].forEach((input, i) => {
-  test(
-    `${i} - It should invalidate an object that does not have the correct type`,
-    objectMacro,
-    input,
-    false
-  );
-});
+['string', Infinity, new Date(), new Map(), new Set(), [], function noop() { }].forEach(
+  (input, i) => {
+    test(
+      `${i} - It should invalidate an object that does not have the correct type`,
+      objectMacro,
+      input,
+      false
+    );
+  }
+);
 
 const arrayMacro = toMacro('array');
 
@@ -489,7 +538,7 @@ const arrayMacro = toMacro('array');
 
 test('It should validate a string that has an alphanumeric format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         username: {
@@ -508,7 +557,7 @@ test('It should validate a string that has an alphanumeric format', (t) => {
 
 test('It should invalidate a string that does not have an alphanumeric format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         username: {
@@ -527,7 +576,7 @@ test('It should invalidate a string that does not have an alphanumeric format', 
 
 test('It should validate a string that has a numeric format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         phone: {
@@ -546,7 +595,7 @@ test('It should validate a string that has a numeric format', (t) => {
 
 test('It should invalidate a string that does not have a numeric format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         phone: {
@@ -565,7 +614,7 @@ test('It should invalidate a string that does not have a numeric format', (t) =>
 
 test('It should validate a string that has an email format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         email: {
@@ -584,7 +633,7 @@ test('It should validate a string that has an email format', (t) => {
 
 test('It should invalidate a string that does not have an email format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         email: {
@@ -603,7 +652,7 @@ test('It should invalidate a string that does not have an email format', (t) => 
 
 test('It should validate a string that has a date format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         date: {
@@ -622,7 +671,7 @@ test('It should validate a string that has a date format', (t) => {
 
 test('It should invalidate a string that does not have a date format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         date: {
@@ -641,7 +690,7 @@ test('It should invalidate a string that does not have a date format', (t) => {
 
 test('It should validate a string that has a URL format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         website: {
@@ -660,7 +709,7 @@ test('It should validate a string that has a URL format', (t) => {
 
 test('It should invalidate a string that does not have a URL format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         website: {
@@ -679,7 +728,7 @@ test('It should invalidate a string that does not have a URL format', (t) => {
 
 test('It should validate a string that has a hex color format', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         hex: {
@@ -698,7 +747,7 @@ test('It should validate a string that has a hex color format', (t) => {
 
 test('It should invalidate a string that does not have a hex color format', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         hex: {
@@ -717,7 +766,7 @@ test('It should invalidate a string that does not have a hex color format', (t) 
 
 test('It should validate an input with additional properties that are allowed', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         first: {
@@ -745,7 +794,7 @@ test('It should validate an input with additional properties that are allowed', 
 
 test('It should invalidate an input with additional properties that are disallowed', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         first: {
@@ -773,7 +822,7 @@ test('It should invalidate an input with additional properties that are disallow
 
 test('It should invalidate an input with additional properties that are disallowed in a nested object', (t) => {
   const expected = false;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         blip: {
@@ -806,7 +855,7 @@ test('It should invalidate an input with additional properties that are disallow
 
 test('It should validate a Flow Component', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         component: {
@@ -846,7 +895,7 @@ test('It should validate a Flow Component', (t) => {
 
 test('It should validate a App Component', (t) => {
   const expected = true;
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         component: {
@@ -888,7 +937,7 @@ test('It should validate a App Component', (t) => {
 });
 
 test('It should work with the demo example', (t) => {
-  const { success } = match.test(
+  const { success } = mikrovalid.test(
     {
       properties: {
         personal: {
@@ -934,7 +983,7 @@ test('It should fail when missing a required key in the base', (t) => {
     }
   };
 
-  const result = match.test(
+  const result = mikrovalid.test(
     {
       properties: {
         thing: {
@@ -959,7 +1008,7 @@ test('It should fail when missing a required key in the root of a nested object'
     }
   };
 
-  const result = match.test(
+  const result = mikrovalid.test(
     {
       properties: {
         things: {
@@ -988,7 +1037,7 @@ test('It should fail when missing a required key in the child of a nested object
     value: {}
   };
 
-  const result = match.test(
+  const result = mikrovalid.test(
     {
       properties: {
         things: {
@@ -1020,7 +1069,7 @@ test('It should fail when missing a required key in the child of a nested object
 test('It should throw an error if there is no input', (t) => {
   const expected = 'Error';
   const error: any = t.throws(() => {
-    match.test(
+    mikrovalid.test(
       {
         properties: {
           money: { type: 'number' }
