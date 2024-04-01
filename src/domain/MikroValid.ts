@@ -97,8 +97,8 @@ export class MikroValid {
     results: Result[] = [],
     errors: ValidationError[] = []
   ) {
-    const isAdditionalsOk = schema.additionalProperties ?? true;
-    const requiredKeys = schema.required || [];
+    const isAdditionalsOk = schema?.additionalProperties ?? true;
+    const requiredKeys = schema?.required || [];
 
     errors = this.checkForRequiredKeysErrors(requiredKeys, input, errors);
     errors = this.checkForDisallowedProperties(
@@ -182,7 +182,7 @@ export class MikroValid {
           key: `${propertyKeys}`,
           value: inputKeys,
           success: false,
-          error: `Has additional disallowed properties: '${additionals.join(', ')}'!`
+          error: `Has additional (disallowed) properties: '${additionals.join(', ')}'!`
         });
     }
 

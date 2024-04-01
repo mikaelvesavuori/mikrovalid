@@ -1,7 +1,7 @@
 {
   "name": "mikrovalid",
   "description": "MikroValid is the JSON validator that cuts out all the bullshit.",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "author": "Mikael Vesavuori",
   "license": "MIT",
   "main": "./lib/index.js",
@@ -34,10 +34,7 @@
     "clean": "rm -rf lib",
     "package": "npm pack",
     "prepublishOnly": "npm run build",
-    "prepare": "husky install",
-    "docs": "npm run docs:clean && npm run docs:typedoc",
-    "docs:clean": "rm -rf docs",
-    "docs:typedoc": "npx typedoc --entryPoints src --entryPointStrategy expand --exclude '**/*+(test).ts' --externalPattern 'node_modules/**/*' --excludeExternals --out docs/"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@ava/typescript": "4",
@@ -52,7 +49,6 @@
     "husky": "9",
     "prettier": "3",
     "ts-node": "10",
-    "typedoc": "^0.25.9",
     "typescript": "5"
   },
   "ava": {
