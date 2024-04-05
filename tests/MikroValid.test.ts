@@ -256,6 +256,25 @@ test('It should validate an object', (t) => {
   t.is(success, expected);
 });
 
+test('It should not validate an empty string when using matchesPattern', (t) => {
+  const expected = false;
+  const { success } = mikrovalid.test(
+    {
+      properties: {
+        thing: {
+          type: 'string',
+          matchesPattern: /^(something)$/
+        }
+      }
+    },
+    {
+      thing: ''
+    }
+  );
+
+  t.is(success, expected);
+});
+
 test('It should validate a nested object', (t) => {
   const expected = true;
   const { success } = mikrovalid.test(
@@ -893,7 +912,7 @@ test('It should validate a Flow Component', (t) => {
   t.is(success, expected);
 });
 
-test('It should validate a App Component', (t) => {
+test('It should validate an App Component', (t) => {
   const expected = true;
   const { success } = mikrovalid.test(
     {

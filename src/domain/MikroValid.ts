@@ -140,7 +140,7 @@ export class MikroValid {
    * @description Checks if a value is actually defined as a non-null value.
    */
   private isDefined(value: unknown) {
-    if (!!value) return true;
+    if (!!value || value === '') return true;
     return false;
   }
 
