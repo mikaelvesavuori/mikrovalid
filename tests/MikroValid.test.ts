@@ -364,8 +364,7 @@ test('It should invalidate a partial failure (invalid optional property)', (t) =
     queryParams: 'not an object'
   };
 
-  const { success, errors } = mikrovalid.test(schema, input);
-  console.log(errors);
+  const { success } = mikrovalid.test(schema, input);
 
   t.is(success, expected);
 });
@@ -986,6 +985,148 @@ test('It should work with the demo example', (t) => {
     }
   );
 
+  t.is(success, true);
+});
+
+test('It should create a validation schema from the demo example', (t) => {
+  const expected = {
+    properties: {
+      personal: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name'],
+        name: { type: 'string', minLength: 1 }
+      },
+      work: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['office', 'currency', 'salary'],
+        office: { type: 'string', minLength: 1 },
+        currency: { type: 'string', minLength: 1 },
+        salary: { type: 'number' }
+      }
+    },
+    additionalProperties: false,
+    required: ['personal', 'work']
+  };
+
+  const input = {
+    personal: {
+      name: 'Sam Person'
+    },
+    work: {
+      office: 'London',
+      currency: 'GBP',
+      salary: 10000
+    }
+  };
+
+  const validationSchema = mikrovalid.schemaFrom(input);
+  const { success } = mikrovalid.test(validationSchema as any, input);
+
+  t.deepEqual(validationSchema, expected);
+  t.is(success, true);
+});
+
+test('It should create a validation schema from a simple JSON object input which does not pass due to null input values', (t) => {
+  const expected: Record<string, any> = {
+    properties: {
+      time: { type: 'string', minLength: 1 },
+      cancelled: { type: 'boolean' },
+      fruits: {
+        type: 'array',
+        items: {
+          type: 'string',
+          minLength: 1
+        }
+      }
+    },
+    additionalProperties: false,
+    required: ['time', 'cancelled', 'fruits']
+  };
+
+  const input = {
+    time: '20240301',
+    cancelled: true,
+    fruits: [null, 'orange']
+  };
+
+  const validationSchema = mikrovalid.schemaFrom(input);
+  const { success } = mikrovalid.test(validationSchema as any, input);
+
+  t.deepEqual(validationSchema, expected);
+  t.is(success, false);
+});
+
+test('It should create a validation schema from a complex JSON object input which passes', (t) => {
+  const expected: Record<string, any> = {
+    properties: {
+      identity: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'age', 'address'],
+        name: { type: 'string', minLength: 1 },
+        age: { type: 'number' },
+        address: {
+          type: 'object',
+          additionalProperties: false,
+          street: {
+            type: 'string',
+            minLength: 1
+          },
+          number: {
+            type: 'number'
+          },
+          required: ['street', 'number']
+        }
+      },
+      time: { type: 'string', minLength: 1 },
+      cancelled: { type: 'boolean' },
+      fruits: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name'],
+          name: { type: 'string', minLength: 1 }
+        }
+      }
+    },
+    additionalProperties: false,
+    required: ['identity', 'time', 'cancelled', 'fruits']
+  };
+
+  const input = {
+    identity: { name: 'Some text here', age: 123, address: { street: 'Main Street', number: 123 } },
+    time: '20240301',
+    cancelled: true,
+    fruits: [{ name: 'orange' }, { name: 'banana' }]
+  };
+
+  const validationSchema = mikrovalid.schemaFrom(input);
+  const { success } = mikrovalid.test(validationSchema as any, input);
+
+  t.deepEqual(validationSchema, expected);
+  t.is(success, true);
+});
+
+test('It should not create array item data when arrays contain mixed types', (t) => {
+  const expected: Record<string, any> = {
+    properties: {
+      fruits: { type: 'array' }
+    },
+    additionalProperties: false,
+    required: ['fruits']
+  };
+
+  const input = {
+    fruits: ['banana', 'orange', ['apple', 'pear']]
+  };
+
+  const validationSchema = mikrovalid.schemaFrom(input);
+  const { success } = mikrovalid.test(validationSchema as any, input);
+
+  t.deepEqual(validationSchema, expected);
   t.is(success, true);
 });
 

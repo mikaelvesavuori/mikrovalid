@@ -1,11 +1,13 @@
 import {
   FirstLevelDefinition,
+  PropertySchema,
   Result,
   RootDefinition,
   SchemaDefinition,
   ValidationError,
   ValidationFormat,
   ValidationResult,
+  ValidationSchema,
   ValidationTypes,
   ValidationValue
 } from '../interfaces/MikroValid';
@@ -448,5 +450,101 @@ export class MikroValid {
    */
   private matchesPattern(pattern: RegExp, input: string) {
     return new RegExp(pattern).test(input);
+  }
+
+  /**
+   * @description Generates a functional validation schema from the provided input.
+   *
+   * @example
+   * import { MikroValid } from 'mikrovalid';
+   *
+   * const mikrovalid = new MikroValid();
+   *
+   * const input = {
+   *   personal: {
+   *     name: 'Sam Person'
+   *   },
+   *   work: {
+   *     office: 'London',
+   *     currency: 'GBP',
+   *     salary: 10000
+   *   }
+   * };
+   *
+   * mikrovalid.schemaFrom(input);
+   */
+  public schemaFrom(input: any): ValidationSchema {
+    const schema: ValidationSchema = { properties: {}, additionalProperties: false, required: [] };
+
+    for (const key in input) {
+      const value = input[key];
+      schema.required!.push(key);
+
+      if (Array.isArray(value)) {
+        schema.properties![key] = this.generateArraySchema(value);
+      } else if (typeof value === 'object' && value !== null) {
+        schema.properties![key] = this.generateNestedObjectSchema(value);
+      } else {
+        schema.properties![key] = this.generatePropertySchema(value);
+      }
+    }
+
+    return schema;
+  }
+
+  private generateArraySchema(array: unknown[]): ValidationSchema {
+    const schema: Record<string, any> = { type: 'array' };
+    const cleanedArray = array.filter((element) => element);
+
+    if (cleanedArray.length > 0) {
+      const firstElement = cleanedArray[0];
+
+      const allOfSameType = cleanedArray.every((element) => typeof element === typeof firstElement);
+
+      if (allOfSameType) {
+        if (typeof firstElement === 'object' && !Array.isArray(firstElement)) {
+          schema.items = this.generateNestedObjectSchema(firstElement as Record<string, any>);
+        } else {
+          schema.items = this.generatePropertySchema(firstElement);
+        }
+      } else {
+        console.warn(
+          'All elements in array are not of the same type. Unable to generate a schema for these elements.'
+        );
+      }
+    }
+
+    return schema as ValidationSchema;
+  }
+
+  private generateNestedObjectSchema(input: Record<string, any>): ValidationSchema {
+    const schema: Record<string, any> = {
+      type: 'object',
+      additionalProperties: false,
+      required: []
+    };
+
+    for (const key in input) {
+      const value = input[key];
+      schema.required.push(key);
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+        schema[key] = this.generateNestedObjectSchema(value);
+      } else schema[key] = this.generatePropertySchema(value);
+    }
+
+    return schema as ValidationSchema;
+  }
+
+  private generatePropertySchema(value: unknown): PropertySchema {
+    const type: string = typeof value;
+    const schema: Record<string, any> = { type };
+
+    switch (type) {
+      case 'string':
+        schema.minLength = 1;
+        break;
+    }
+
+    return schema as PropertySchema;
   }
 }

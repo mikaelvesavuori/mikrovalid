@@ -92,9 +92,25 @@ export interface RootDefinition<S extends { properties: any }> {
 export type FirstLevelDefinition<S> = RootProperties<
   Extract<ExcludeFromAllTypes<S, keyof S>, string>
 > & {
-    [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
-  };
+  [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
+};
 
 export type SchemaDefinition<S> = AllTypes<Extract<ExcludeFromAllTypes<S, keyof S>, string>> & {
   [Key in keyof S as ExcludeFromAllTypes<S, Key>]: SchemaDefinition<S[Key]>;
+};
+
+// Simplified types for schema generation from input
+
+export type ValidationSchema = {
+  type?: string;
+  properties?: { [key: string]: ValidationSchema | PropertySchema };
+  additionalProperties?: boolean;
+  required?: string[];
+  items?: ValidationSchema | PropertySchema; // For arrays
+};
+
+export type PropertySchema = {
+  type: string;
+  minLength?: number;
+  minValue?: number;
 };

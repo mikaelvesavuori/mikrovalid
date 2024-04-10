@@ -69,6 +69,8 @@ const input = {
   }
 };
 
+const generatedSchema = mikrovalid.schemaFrom(input); // <-- OPTIONAL: You can also generate a schema directly from your input!
+
 const { success, errors } = mikrovalid.test(schema, input);
 
 console.log('Was the test successful?', success);
@@ -108,6 +110,8 @@ A valid input for this particular schema is:
   "username": "Sam Person"
 }
 ```
+
+Using the `schemaFrom()` method, you can easily generate schemas for your input. This is especially useful in a programmatic environment in which you can't decide or know before-hand what schema to create. Note that the generated schemas should work for the majority of cases, but you should try this functionality out before relying fully on it.
 
 #### Properties
 
