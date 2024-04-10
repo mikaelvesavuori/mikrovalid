@@ -18,7 +18,7 @@ MikroValid is the JSON validator that cuts out all the bullshit:
 - Doesn't pollute your code with "convenient" APIs
 - Minimalist approach that will work for the majority of conventional-type objects
 - Meant to work effortlessly in both client- and server-side environments
-- Tiny (~1.9 KB gzipped), which is ~7-80x smaller than common, popular options
+- Tiny (~2.2 KB gzipped), which is ~7-80x smaller than common, popular options
 - Zero dependencies
 - Has 100% test coverage
 
