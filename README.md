@@ -76,6 +76,14 @@ const { success, errors } = mikrovalid.test(schema, input);
 console.log('Was the test successful?', success);
 ```
 
+### Warnings and silent mode
+
+By default you will get warnings and non-critical message output. If you want to silence these message, you can instantiate MikroValid by passing `true` for the `isSilent` option, like so:
+
+```ts
+const mikrovalid = new MikroValid(true);
+```
+
 ### Errors
 
 The `errors` object includes an aggregation of any errors, both those relating to field-level validation and for inline failures emitted when not having required keys or having excess keys.

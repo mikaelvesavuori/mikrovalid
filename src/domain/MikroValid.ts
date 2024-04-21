@@ -14,6 +14,15 @@ import {
 
 export class MikroValid {
   /**
+   * Toggle to silence (suppress) non-critical messages, such as warnings.
+   */
+  isSilent: boolean;
+
+  constructor(isSilent = false) {
+    this.isSilent = isSilent;
+  }
+
+  /**
    * @description MikroValid is a lightweight validator
    * that works both on the client and server.
    *
@@ -337,7 +346,8 @@ export class MikroValid {
         }
       }
     } else {
-      console.warn(`Missing property '${properties}' for match '${match}'. Skipping...`);
+      if (!this.isSilent)
+        console.warn(`Missing property '${properties}' for match '${match}'. Skipping...`);
     }
 
     return { success: true };

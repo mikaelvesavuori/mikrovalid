@@ -7,6 +7,36 @@ const mikrovalid = new MikroValid();
 /**
  * POSITIVE TESTS
  */
+test('It should set silent mode', (t) => {
+  let warnCalled = false;
+  const originalWarn = console.warn;
+
+  console.warn = () => (warnCalled = true);
+
+  new MikroValid(true).test(
+    {
+      properties: {
+        inside: {
+          type: 'object',
+          thing: {
+            type: 'string'
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      inside: {
+        somethingElse: '...?'
+      }
+    }
+  );
+
+  t.false(warnCalled, 'console.warn was called when it should not have been');
+
+  t.teardown(() => (console.warn = originalWarn));
+});
+
 test('It should validate a string', (t) => {
   const expected = true;
   const { success } = mikrovalid.test(
