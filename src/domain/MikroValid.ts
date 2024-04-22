@@ -16,7 +16,7 @@ export class MikroValid {
   /**
    * Toggle to silence (suppress) non-critical messages, such as warnings.
    */
-  isSilent: boolean;
+  private readonly isSilent: boolean;
 
   constructor(isSilent = false) {
     this.isSilent = isSilent;
