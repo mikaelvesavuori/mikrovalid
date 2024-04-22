@@ -2,7 +2,7 @@ import test from 'ava';
 
 import { MikroValid } from '../src/domain/MikroValid';
 
-const mikrovalid = new MikroValid();
+const mikrovalid = new MikroValid(true);
 
 /**
  * POSITIVE TESTS
@@ -33,6 +33,36 @@ test('It should set silent mode', (t) => {
   );
 
   t.false(warnCalled, 'console.warn was called when it should not have been');
+
+  t.teardown(() => (console.warn = originalWarn));
+});
+
+test('It should emit warning messages', (t) => {
+  let warnCalled = true;
+  const originalWarn = console.warn;
+
+  console.warn = () => (warnCalled = false);
+
+  new MikroValid(false).test(
+    {
+      properties: {
+        inside: {
+          type: 'object',
+          thing: {
+            type: 'string'
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      inside: {
+        somethingElse: '...?'
+      }
+    }
+  );
+
+  t.false(warnCalled, 'console.warn was not called when it should have been');
 
   t.teardown(() => (console.warn = originalWarn));
 });
@@ -321,6 +351,31 @@ test('It should validate a nested object', (t) => {
     },
     {
       boxes: { box: 'stuff' }
+    }
+  );
+
+  t.is(success, expected);
+});
+
+test('It should skip checking for required properties nested in non-existing optional properties', (t) => {
+  const expected = true;
+  const { success } = mikrovalid.test(
+    {
+      properties: {
+        id: { type: 'string' },
+        contextId: { type: 'string' },
+        coordinates: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+          type: 'object',
+          required: ['x', 'y']
+        },
+        required: ['id', 'contextId']
+      }
+    },
+    {
+      id: 'some_id',
+      contextId: 'some_id'
     }
   );
 

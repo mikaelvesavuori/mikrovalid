@@ -109,7 +109,7 @@ export class MikroValid {
     errors: ValidationError[] = []
   ) {
     const isAdditionalsOk = schema?.additionalProperties ?? true;
-    const requiredKeys = schema?.required || [];
+    const requiredKeys: string[] = schema?.required || [];
 
     errors = this.checkForRequiredKeysErrors(requiredKeys, input, errors);
     errors = this.checkForDisallowedProperties(
@@ -120,15 +120,17 @@ export class MikroValid {
     );
 
     for (const key in schema) {
+      const isKeyRequired = requiredKeys.includes(key) && key !== 'required';
       const propertyKey = schema[key];
       const inputKey: ValidationValue = input[key];
       const isInnerAdditionalsOk = propertyKey.additionalProperties ?? true;
 
-      errors = this.checkForRequiredKeysErrors(
-        propertyKey.required || [],
-        inputKey as Record<string, any>,
-        errors
-      );
+      if (isKeyRequired)
+        errors = this.checkForRequiredKeysErrors(
+          propertyKey.required || [],
+          inputKey as Record<string, any>,
+          errors
+        );
 
       if (this.isDefined(inputKey)) {
         this.handleValidation(key, inputKey, propertyKey, results);
