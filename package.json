@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "start": "npx ts-node src/index.ts",
-    "test": "npx vitest run",
+    "test": "npx vitest run --coverage",
     "test:watch": "npx vitest",
     "build": "npm run clean && tsup src --format esm,cjs --dts && mv dist lib",
     "clean": "rm -rf lib && rm -rf dist",
@@ -48,6 +48,7 @@
     "@types/node": "20",
     "@typescript-eslint/eslint-plugin": "7",
     "@typescript-eslint/parser": "7",
+    "@vitest/coverage-v8": "1",
     "eslint": "8",
     "eslint-config-prettier": "9",
     "eslint-plugin-prettier": "5",
