@@ -10,7 +10,7 @@ import {
   ValidationSchema,
   ValidationTypes,
   ValidationValue
-} from '../interfaces/MikroValid';
+} from '../interfaces/MikroValid.js';
 
 export class MikroValid {
   /**

@@ -1,1 +1,1 @@
-export * from './domain/MikroValid';
+export * from './domain/MikroValid.js';

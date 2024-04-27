@@ -1,10 +1,18 @@
 {
   "name": "mikrovalid",
   "description": "MikroValid is the JSON validator that cuts out all the bullshit.",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "author": "Mikael Vesavuori",
   "license": "MIT",
-  "main": "./lib/index.js",
+  "type": "module",
+  "main": "lib/index.cjs",
+  "module": "lib/index.js",
+  "exports": {
+    ".": {
+      "require": "./lib/index.cjs",
+      "import": "./lib/index.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mikaelvesavuori/mikrovalid.git"
@@ -28,41 +36,25 @@
   ],
   "scripts": {
     "start": "npx ts-node src/index.ts",
-    "test": "npx c8 -reporter=lcov ava",
-    "test:watch": "npx c8 -reporter=lcov ava --watch",
-    "build": "npm run clean && npx tsc --project tsconfig.build.json",
-    "clean": "rm -rf lib",
+    "test": "npx vitest run",
+    "test:watch": "npx vitest",
+    "build": "npm run clean && tsup src --format esm,cjs --dts && mv dist lib",
+    "clean": "rm -rf lib && rm -rf dist",
     "package": "npm pack",
     "prepublishOnly": "npm run build",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@ava/typescript": "4",
     "@types/node": "20",
     "@typescript-eslint/eslint-plugin": "7",
     "@typescript-eslint/parser": "7",
-    "ava": "6",
-    "c8": "9",
     "eslint": "8",
     "eslint-config-prettier": "9",
     "eslint-plugin-prettier": "5",
     "husky": "9",
     "prettier": "3",
-    "ts-node": "10",
-    "typescript": "5"
-  },
-  "ava": {
-    "typescript": {
-      "rewritePaths": {
-        "src/": "lib/"
-      },
-      "compile": false
-    },
-    "files": [
-      "tests/**/*.ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ]
+    "tsup": "8",
+    "typescript": "5",
+    "vitest": "1"
   }
 }

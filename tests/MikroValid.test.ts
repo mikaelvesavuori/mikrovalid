@@ -1,73 +1,77 @@
-import test from 'ava';
+import { describe, it, test, expect } from 'vitest';
 
-import { MikroValid } from '../src/domain/MikroValid';
+import { MikroValid } from '../src/domain/MikroValid.js';
 
 const mikrovalid = new MikroValid(true);
 
 /**
  * POSITIVE TESTS
  */
-test('It should set silent mode', (t) => {
+test('It should set silent mode', () => {
   let warnCalled = false;
   const originalWarn = console.warn;
 
-  console.warn = () => (warnCalled = true);
+  try {
+    console.warn = () => (warnCalled = true);
 
-  new MikroValid(true).test(
-    {
-      properties: {
+    new MikroValid(true).test(
+      {
+        properties: {
+          inside: {
+            type: 'object',
+            thing: {
+              type: 'string'
+            },
+            additionalProperties: false
+          }
+        }
+      },
+      {
         inside: {
-          type: 'object',
-          thing: {
-            type: 'string'
-          },
-          additionalProperties: false
+          somethingElse: '...?'
         }
       }
-    },
-    {
-      inside: {
-        somethingElse: '...?'
-      }
-    }
-  );
+    );
 
-  t.false(warnCalled, 'console.warn was called when it should not have been');
-
-  t.teardown(() => (console.warn = originalWarn));
+    expect(warnCalled).toBe(false);
+  } finally {
+    console.warn = originalWarn;
+  }
 });
 
-test('It should emit warning messages', (t) => {
+test('It should emit warning messages', () => {
   let warnCalled = true;
   const originalWarn = console.warn;
 
-  console.warn = () => (warnCalled = false);
+  try {
+    console.warn = () => (warnCalled = false);
 
-  new MikroValid(false).test(
-    {
-      properties: {
+    new MikroValid(false).test(
+      {
+        properties: {
+          inside: {
+            type: 'object',
+            thing: {
+              type: 'string'
+            },
+            additionalProperties: false
+          }
+        }
+      },
+      {
         inside: {
-          type: 'object',
-          thing: {
-            type: 'string'
-          },
-          additionalProperties: false
+          somethingElse: '...?'
         }
       }
-    },
-    {
-      inside: {
-        somethingElse: '...?'
-      }
-    }
-  );
+    );
 
-  t.false(warnCalled, 'console.warn was not called when it should have been');
-
-  t.teardown(() => (console.warn = originalWarn));
+    expect(warnCalled).toBe(false);
+  } finally {
+    console.warn = originalWarn;
+  }
 });
 
-test('It should validate a string', (t) => {
+test('It should validate a string', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -82,10 +86,10 @@ test('It should validate a string', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that is too long', (t) => {
+test('It should invalidate a string that is too long', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -101,10 +105,10 @@ test('It should invalidate a string that is too long', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that is too short', (t) => {
+test('It should invalidate a string that is too short', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -120,10 +124,10 @@ test('It should invalidate a string that is too short', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a number', (t) => {
+test('It should validate a number', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -138,10 +142,10 @@ test('It should validate a number', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a number that is too small', (t) => {
+test('It should validate a number that is too small', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -157,10 +161,10 @@ test('It should validate a number that is too small', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a number that is too big', (t) => {
+test('It should validate a number that is too big', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -176,10 +180,10 @@ test('It should validate a number that is too big', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an array', (t) => {
+test('It should validate an array', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -194,10 +198,10 @@ test('It should validate an array', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an array containing numbers', (t) => {
+test('It should validate an array containing numbers', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -215,10 +219,10 @@ test('It should validate an array containing numbers', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an array containing objects', (t) => {
+test('It should validate an array containing objects', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -236,10 +240,10 @@ test('It should validate an array containing objects', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate an array that should only contain numbers', (t) => {
+test('It should invalidate an array that should only contain numbers', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -257,10 +261,10 @@ test('It should invalidate an array that should only contain numbers', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate an array that is too long', (t) => {
+test('It should invalidate an array that is too long', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -276,10 +280,10 @@ test('It should invalidate an array that is too long', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate an array that is too short', (t) => {
+test('It should invalidate an array that is too short', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -295,10 +299,10 @@ test('It should invalidate an array that is too short', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an object', (t) => {
+test('It should validate an object', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -313,10 +317,10 @@ test('It should validate an object', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should not validate an empty string when using matchesPattern', (t) => {
+test('It should not validate an empty string when using matchesPattern', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -332,10 +336,10 @@ test('It should not validate an empty string when using matchesPattern', (t) => 
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a nested object', (t) => {
+test('It should validate a nested object', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -354,10 +358,10 @@ test('It should validate a nested object', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should skip checking for required properties nested in non-existing optional properties', (t) => {
+test('It should skip checking for required properties nested in non-existing optional properties', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -379,10 +383,10 @@ test('It should skip checking for required properties nested in non-existing opt
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an input that only uses required (not optional) properties', (t) => {
+test('It should validate an input that only uses required (not optional) properties', () => {
   const expected = true;
 
   const schema: any = {
@@ -420,10 +424,10 @@ test('It should validate an input that only uses required (not optional) propert
 
   const { success } = mikrovalid.test(schema, input);
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a partial failure (invalid optional property)', (t) => {
+test('It should invalidate a partial failure (invalid optional property)', () => {
   const expected = false;
 
   const schema: any = {
@@ -451,10 +455,10 @@ test('It should invalidate a partial failure (invalid optional property)', (t) =
 
   const { success } = mikrovalid.test(schema, input);
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate multiple errors separately', (t) => {
+test('It should invalidate multiple errors separately', () => {
   const expected = [
     {
       key: '',
@@ -488,21 +492,33 @@ test('It should invalidate multiple errors separately', (t) => {
     { box: { first: 1, third: 3 } }
   );
 
-  t.deepEqual(errors, expected);
+  expect(errors).toMatchObject(expected);
 });
 
 /**
  * TYPES
  */
 
-const toMacro = (type: 'string' | 'number' | 'boolean' | 'object' | 'array') =>
-  test.macro({
-    exec(t, input, expected: boolean) {
+describe('String validation tests', () => {
+  const inputs = [
+    '',
+    'string',
+    String('boxed'),
+    `template`,
+    '😄',
+    '\uD801\uDC00',
+    String.raw`C:\Folder\folder\file.html`
+  ];
+
+  inputs.forEach((input) => {
+    it(`It should validate a string that has the correct type for input: ${input}`, () => {
+      const type = 'string';
+      const expected = true;
       const { success } = mikrovalid.test(
         {
           properties: {
             property: {
-              type: type // Just making this totally explicit
+              type: type
             }
           }
         },
@@ -510,136 +526,265 @@ const toMacro = (type: 'string' | 'number' | 'boolean' | 'object' | 'array') =>
           property: input
         }
       );
-      t.is(success, expected);
-    },
-    title(providedTitle = '', input, expected) {
-      return `${providedTitle} [${input} = ${expected}]`.trim();
-    }
+      expect(success).toBe(expected);
+    });
   });
-
-const stringMacro = toMacro('string');
-
-[
-  '',
-  'string',
-  String('boxed'),
-  `template`,
-  '😄',
-  '\uD801\uDC00',
-  String.raw`C:\Folder\folder\file.html`
-].forEach((input) =>
-  test('It should validate a string that has the correct type', stringMacro, input, true)
-);
-
-[
-  -1,
-  1,
-  new Date(),
-  Infinity,
-  new Set(),
-  new Map(),
-  () => { },
-  { [Symbol.toStringTag]: 'Empty Object' },
-  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
-].forEach((input) => {
-  test(
-    'It should invalidate a string that does not have the correct type',
-    stringMacro,
-    input,
-    false
-  );
 });
 
-const numberMacro = toMacro('number');
+describe('String invalidation tests', () => {
+  const inputs = [
+    -1,
+    1,
+    new Date(),
+    Infinity,
+    new Set(),
+    new Map(),
+    () => { },
+    { [Symbol.toStringTag]: 'Empty Object' },
+    { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+  ];
 
-[
-  -1,
-  1,
-  Infinity,
-  -Infinity,
-  0.1,
-  2.0,
-  Number.MAX_SAFE_INTEGER,
-  Number.MAX_VALUE,
-  Number.MIN_VALUE,
-  Number(3)
-].forEach((input) => {
-  test('It should validate a number that has the correct type ', numberMacro, input, true);
+  inputs.forEach((input) => {
+    it(`It should invalidate a string that has the incorrect type for input: ${input}`, () => {
+      const type = 'string';
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-[
-  'string',
-  new Date(),
-  new Set(),
-  new Map(),
-  () => { },
-  { [Symbol.toStringTag]: 'Empty Object' },
-  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
-].forEach((input) => {
-  test(
-    'It should invalidate a number that does not have the correct type',
-    numberMacro,
-    input,
-    false
-  );
+describe('Number validation tests', () => {
+  const inputs = [
+    -1,
+    1,
+    Infinity,
+    -Infinity,
+    0.1,
+    2.0,
+    Number.MAX_SAFE_INTEGER,
+    Number.MAX_VALUE,
+    Number.MIN_VALUE,
+    Number(3)
+  ];
+
+  inputs.forEach((input) => {
+    it(`It should validate a number that has the correct type for input: ${input}`, () => {
+      const type = 'number';
+      const expected = true;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-const booleanMacro = toMacro('boolean');
+describe('Number invalidation tests', () => {
+  const inputs = [
+    'string',
+    new Date(),
+    new Set(),
+    new Map(),
+    () => { },
+    { [Symbol.toStringTag]: 'Empty Object' },
+    { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+  ];
 
-[true, false].forEach((input) => {
-  test('It should validate a boolean that has the correct type', booleanMacro, input, true);
+  inputs.forEach((input) => {
+    it(`It should invalidate a number that has the incorrect type for input: ${input}`, () => {
+      const type = 'number';
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-[
-  `"false"`,
-  { [Symbol.toStringTag]: 'Empty Object' },
-  { [Symbol.toStringTag]: 'Object with value', property: 'value' }
-].forEach((input) => {
-  test(
-    'It should invalidate a boolean that does not have the correct type',
-    numberMacro,
-    input,
-    false
-  );
+describe('Boolean validation tests', () => {
+  const inputs = [true, false];
+
+  inputs.forEach((input) => {
+    it(`It should validate a boolean that has the correct type for input: ${input}`, () => {
+      const type = 'boolean';
+      const expected = true;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-const objectMacro = toMacro('object');
+describe('Boolean invalidation tests', () => {
+  const inputs = [
+    `"false"`,
+    { [Symbol.toStringTag]: 'Empty Object' },
+    { [Symbol.toStringTag]: 'Object with value', property: 'value' }
+  ];
 
-[{ something: 'Object with value', property: 'value' }].forEach((input) => {
-  test('It should validate an object that has the correct type', objectMacro, input, true);
+  inputs.forEach((input) => {
+    it(`It should invalidate a boolean that has the incorrect type for input: ${input}`, () => {
+      const type = 'boolean';
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-['string', Infinity, new Date(), new Map(), new Set(), [], function noop() { }].forEach(
-  (input, i) => {
-    test(
-      `${i} - It should invalidate an object that does not have the correct type`,
-      objectMacro,
-      input,
-      false
-    );
-  }
-);
+describe('Object validation tests', () => {
+  const inputs = [{ something: 'Object with value', property: 'value' }];
 
-const arrayMacro = toMacro('array');
-
-[[{ property: 'value' }], [], [''], Array({ length: undefined })].forEach((input, i) => {
-  test(`${i} - It should validate an array that has the correct type`, arrayMacro, input, true);
+  inputs.forEach((input) => {
+    it(`It should validate an object that has the correct type for input: ${input}`, () => {
+      const type = 'object';
+      const expected = true;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
-['[]', {}, { length: 1 }, [].keys(), new Set(), new Map()].forEach((input, i) => {
-  test(
-    `${i} - It should invalidate an array that does not have the correct type`,
-    arrayMacro,
-    input,
-    false
-  );
+describe('Object invalidation tests', () => {
+  const inputs = ['string', Infinity, new Date(), new Map(), new Set(), [], function noop() { }];
+
+  inputs.forEach((input) => {
+    it(`It should invalidate an object that has the incorrect type for input: ${input}`, () => {
+      const type = 'object';
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
+});
+
+describe('Array validation tests', () => {
+  const inputs = [[{ property: 'value' }], [], [''], Array({ length: undefined })];
+
+  inputs.forEach((input) => {
+    it(`It should validate an object that has the correct type for input: ${input}`, () => {
+      const type = 'array';
+      const expected = true;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
+});
+
+describe('Array invalidation tests', () => {
+  const inputs = ['[]', {}, { length: 1 }, [].keys(), new Set(), new Map()];
+
+  inputs.forEach((input) => {
+    it(`It should invalidate an object that has the incorrect type for input: ${input}`, () => {
+      const type = 'array';
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
 });
 
 /**
  * FORMATS
  */
 
-test('It should validate a string that has an alphanumeric format', (t) => {
+test('It should validate a string that has an alphanumeric format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -655,10 +800,10 @@ test('It should validate a string that has an alphanumeric format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have an alphanumeric format', (t) => {
+test('It should invalidate a string that does not have an alphanumeric format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -674,10 +819,10 @@ test('It should invalidate a string that does not have an alphanumeric format', 
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a string that has a numeric format', (t) => {
+test('It should validate a string that has a numeric format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -693,10 +838,10 @@ test('It should validate a string that has a numeric format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have a numeric format', (t) => {
+test('It should invalidate a string that does not have a numeric format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -712,10 +857,10 @@ test('It should invalidate a string that does not have a numeric format', (t) =>
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a string that has an email format', (t) => {
+test('It should validate a string that has an email format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -731,10 +876,10 @@ test('It should validate a string that has an email format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have an email format', (t) => {
+test('It should invalidate a string that does not have an email format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -750,10 +895,10 @@ test('It should invalidate a string that does not have an email format', (t) => 
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a string that has a date format', (t) => {
+test('It should validate a string that has a date format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -769,10 +914,10 @@ test('It should validate a string that has a date format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have a date format', (t) => {
+test('It should invalidate a string that does not have a date format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -788,10 +933,10 @@ test('It should invalidate a string that does not have a date format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a string that has a URL format', (t) => {
+test('It should validate a string that has a URL format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -807,10 +952,10 @@ test('It should validate a string that has a URL format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have a URL format', (t) => {
+test('It should invalidate a string that does not have a URL format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -826,10 +971,10 @@ test('It should invalidate a string that does not have a URL format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate a string that has a hex color format', (t) => {
+test('It should validate a string that has a hex color format', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -845,10 +990,10 @@ test('It should validate a string that has a hex color format', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate a string that does not have a hex color format', (t) => {
+test('It should invalidate a string that does not have a hex color format', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -864,10 +1009,10 @@ test('It should invalidate a string that does not have a hex color format', (t) 
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an input with additional properties that are allowed', (t) => {
+test('It should validate an input with additional properties that are allowed', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -892,10 +1037,10 @@ test('It should validate an input with additional properties that are allowed', 
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate an input with additional properties that are disallowed', (t) => {
+test('It should invalidate an input with additional properties that are disallowed', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -920,10 +1065,10 @@ test('It should invalidate an input with additional properties that are disallow
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should invalidate an input with additional properties that are disallowed in a nested object', (t) => {
+test('It should invalidate an input with additional properties that are disallowed in a nested object', () => {
   const expected = false;
   const { success } = mikrovalid.test(
     {
@@ -949,14 +1094,14 @@ test('It should invalidate an input with additional properties that are disallow
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
 /**
  * COMPONENTS AND MORE COMPLEX OBJECTS
  */
 
-test('It should validate a Flow Component', (t) => {
+test('It should validate a Flow Component', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -993,10 +1138,10 @@ test('It should validate a Flow Component', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should validate an App Component', (t) => {
+test('It should validate an App Component', () => {
   const expected = true;
   const { success } = mikrovalid.test(
     {
@@ -1036,10 +1181,10 @@ test('It should validate an App Component', (t) => {
     }
   );
 
-  t.is(success, expected);
+  expect(success).toMatchObject(expected);
 });
 
-test('It should work with the demo example', (t) => {
+test('It should work with the demo example', () => {
   const { success } = mikrovalid.test(
     {
       properties: {
@@ -1070,10 +1215,10 @@ test('It should work with the demo example', (t) => {
     }
   );
 
-  t.is(success, true);
+  expect(success).toBe(true);
 });
 
-test('It should create a validation schema from the demo example', (t) => {
+test('It should create a validation schema from the demo example', () => {
   const expected = {
     properties: {
       personal: {
@@ -1109,11 +1254,11 @@ test('It should create a validation schema from the demo example', (t) => {
   const validationSchema = mikrovalid.schemaFrom(input);
   const { success } = mikrovalid.test(validationSchema as any, input);
 
-  t.deepEqual(validationSchema, expected);
-  t.is(success, true);
+  expect(validationSchema).toMatchObject(expected);
+  expect(success).toBe(true);
 });
 
-test('It should create a validation schema from a simple JSON object input which does not pass due to null input values', (t) => {
+test('It should create a validation schema from a simple JSON object input which does not pass due to null input values', () => {
   const expected: Record<string, any> = {
     properties: {
       time: { type: 'string', minLength: 1 },
@@ -1139,11 +1284,11 @@ test('It should create a validation schema from a simple JSON object input which
   const validationSchema = mikrovalid.schemaFrom(input);
   const { success } = mikrovalid.test(validationSchema as any, input);
 
-  t.deepEqual(validationSchema, expected);
-  t.is(success, false);
+  expect(validationSchema).toMatchObject(expected);
+  expect(success).toBe(false);
 });
 
-test('It should create a validation schema from a complex JSON object input which passes', (t) => {
+test('It should create a validation schema from a complex JSON object input which passes', () => {
   const expected: Record<string, any> = {
     properties: {
       identity: {
@@ -1191,11 +1336,11 @@ test('It should create a validation schema from a complex JSON object input whic
   const validationSchema = mikrovalid.schemaFrom(input);
   const { success } = mikrovalid.test(validationSchema as any, input);
 
-  t.deepEqual(validationSchema, expected);
-  t.is(success, true);
+  expect(validationSchema).toMatchObject(expected);
+  expect(success).toBe(true);
 });
 
-test('It should not create array item data when arrays contain mixed types', (t) => {
+test('It should not create array item data when arrays contain mixed types', () => {
   const expected: Record<string, any> = {
     properties: {
       fruits: { type: 'array' }
@@ -1211,14 +1356,14 @@ test('It should not create array item data when arrays contain mixed types', (t)
   const validationSchema = mikrovalid.schemaFrom(input);
   const { success } = mikrovalid.test(validationSchema as any, input);
 
-  t.deepEqual(validationSchema, expected);
-  t.is(success, true);
+  expect(validationSchema).toMatchObject(expected);
+  expect(success).toBe(true);
 });
 
 /**
  * NEGATIVE TESTS
  */
-test('It should fail when missing a required key in the base', (t) => {
+test('It should fail when missing a required key in the base', () => {
   const expected = {
     error: "Missing the required key: 'thing'!",
     key: '',
@@ -1240,10 +1385,10 @@ test('It should fail when missing a required key in the base', (t) => {
     { something: 123 }
   );
 
-  t.deepEqual(result.errors[0], expected);
+  expect(result.errors[0]).toMatchObject(expected);
 });
 
-test('It should fail when missing a required key in the root of a nested object', (t) => {
+test('It should fail when missing a required key in the root of a nested object', () => {
   const expected = {
     error: "Missing the required key: 'things'!",
     key: '',
@@ -1271,10 +1416,10 @@ test('It should fail when missing a required key in the root of a nested object'
     }
   );
 
-  t.deepEqual(result.errors[0], expected);
+  expect(result.errors[0]).toMatchObject(expected);
 });
 
-test('It should fail when missing a required key in the child of a nested object', (t) => {
+test('It should fail when missing a required key in the child of a nested object', () => {
   const expected = {
     error: "Missing the required key: 'deeperThings'!",
     key: '',
@@ -1308,12 +1453,11 @@ test('It should fail when missing a required key in the child of a nested object
     }
   );
 
-  t.deepEqual(result.errors[0], expected);
+  expect(result.errors[0]).toMatchObject(expected);
 });
 
-test('It should throw an error if there is no input', (t) => {
-  const expected = 'Error';
-  const error: any = t.throws(() => {
+test('It should throw an error if there is no input', () => {
+  expect(() => {
     mikrovalid.test(
       {
         properties: {
@@ -1322,7 +1466,5 @@ test('It should throw an error if there is no input', (t) => {
       },
       undefined as any
     );
-  });
-
-  t.is(error.name, expected);
+  }).toThrow();
 });
