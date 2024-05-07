@@ -18,6 +18,8 @@ export class MikroValid {
    */
   private readonly isSilent: boolean;
 
+  private propertyPath: string = '';
+
   constructor(isSilent = false) {
     this.isSilent = isSilent;
   }
@@ -70,6 +72,8 @@ export class MikroValid {
     input: Record<string, any>
   ) {
     if (!input) throw new Error('Missing input!');
+
+    this.updatePropertyPath();
 
     const { results, errors } = this.validate(schema.properties, input);
     const aggregatedErrors = this.compileErrors(results, errors);
@@ -125,12 +129,13 @@ export class MikroValid {
       const inputKey: ValidationValue = input[key];
       const isInnerAdditionalsOk = propertyKey.additionalProperties ?? true;
 
-      if (isKeyRequired)
+      if (isKeyRequired) {
         errors = this.checkForRequiredKeysErrors(
           propertyKey.required || [],
           inputKey as Record<string, any>,
           errors
         );
+      }
 
       if (this.isDefined(inputKey)) {
         this.handleValidation(key, inputKey, propertyKey, results);
@@ -147,6 +152,24 @@ export class MikroValid {
     }
 
     return { results, errors };
+  }
+
+  /**
+   * @description Updates the internal `propertyPath` value. This is used
+   * when outputting the full path to the key where any errors are found.
+   */
+  private updatePropertyPath(key?: string, startValue = '') {
+    if (!key) {
+      this.propertyPath = '';
+      return;
+    }
+
+    if (startValue) this.propertyPath = startValue;
+
+    this.propertyPath = `${this.propertyPath}.${key}`;
+
+    if (this.propertyPath.startsWith('.'))
+      this.propertyPath = this.propertyPath.substring(1, this.propertyPath.length);
   }
 
   /**
@@ -212,27 +235,47 @@ export class MikroValid {
     propertyKey: SchemaDefinition<Schema>,
     results: Result[]
   ) {
-    const validation = this.validateProperty(key, propertyKey, inputKey);
-    results.push(validation);
+    this.updatePropertyPath(key);
 
-    if (this.isArray(inputKey) && propertyKey.items != null) {
+    const validation = this.validateProperty(this.propertyPath, propertyKey, inputKey);
+    results.push(...validation);
+
+    const handleArray = (inputKey: ValidationValue, propertyKey: SchemaDefinition<Schema>) => {
       // @ts-ignore - inputKey is an array
       inputKey.forEach((arrayItem: ValidationValue) => {
-        const validation = this.validateProperty(key, propertyKey.items!, arrayItem);
-        results.push(validation);
+        const validation = this.validateProperty(this.propertyPath, propertyKey.items!, arrayItem);
+        results.push(...validation);
       });
-    } else if (this.isObject(inputKey)) {
+
+      this.updatePropertyPath();
+    };
+
+    const handleObject = (inputKey: any) => {
       const keys = Object.keys(inputKey);
+      const currentPath = this.propertyPath;
+
       keys.forEach((innerKey: string) => {
-        const validation = this.validateProperty(
-          innerKey,
-          propertyKey[innerKey],
-          // @ts-ignore - innerKey will be an object
-          inputKey[innerKey]
-        );
-        results.push(validation);
+        this.updatePropertyPath(innerKey, currentPath);
+
+        if (this.isArray(inputKey[innerKey]) && propertyKey[innerKey].items != null)
+          // @ts-ignore
+          handleArray(inputKey[innerKey], propertyKey[innerKey]);
+        else {
+          const validation = this.validateProperty(
+            this.propertyPath,
+            propertyKey[innerKey],
+            // @ts-ignore - innerKey will be an object
+            inputKey[innerKey]
+          );
+
+          results.push(...validation);
+        }
       });
-    }
+    };
+
+    if (this.isArray(inputKey) && propertyKey.items != null) handleArray(inputKey, propertyKey);
+    else if (this.isObject(inputKey)) handleObject(inputKey);
+    else this.updatePropertyPath();
   }
 
   /**
@@ -251,7 +294,8 @@ export class MikroValid {
       for (const nested of nestedObjects) {
         const nextSchema = propertyKey[nested];
         const nextInput = inputKey[nested];
-        if (nextSchema && nextInput) this.validate(nextSchema, nextInput, results, errors);
+        if (nextSchema && typeof nextInput === 'object')
+          this.validate(nextSchema, nextInput, results, errors);
       }
     }
   }
@@ -286,14 +330,20 @@ export class MikroValid {
     key: string,
     properties: SchemaDefinition<Schema>,
     value: ValidationValue
-  ): Result {
-    const { success, error } = this.validateInput(properties, value);
-    return {
-      key,
-      value,
-      success,
-      error: error ?? ''
-    };
+  ): Result[] {
+    //const { success, error } = this.validateInput(properties, value);
+    const results = this.validateInput(properties, value);
+
+    return results.map((result: ValidationResult) => {
+      const { success, error } = result;
+
+      return {
+        key,
+        value,
+        success,
+        error: error ?? ''
+      };
+    });
   }
 
   /**
@@ -302,7 +352,7 @@ export class MikroValid {
   private validateInput<Schema extends Record<string, any>>(
     properties: SchemaDefinition<Schema>,
     match: ValidationValue
-  ): ValidationResult {
+  ): ValidationResult[] {
     if (properties) {
       const checks = [
         {
@@ -342,17 +392,20 @@ export class MikroValid {
         }
       ];
 
+      const results: any = [];
+
       for (const check of checks) {
-        if (check.condition() && !check.validator()) {
-          return { success: false, error: check.error };
-        }
+        if (check.condition() && !check.validator())
+          results.push({ success: false, error: check.error });
       }
+
+      return results;
     } else {
       if (!this.isSilent)
         console.warn(`Missing property '${properties}' for match '${match}'. Skipping...`);
     }
 
-    return { success: true };
+    return [{ success: true }];
   }
 
   /**
@@ -432,7 +485,7 @@ export class MikroValid {
    */
   private isMinimumLength(minLength: number, input: ValidationValue) {
     if (Array.isArray(input)) return input.length >= minLength;
-    return input.toString().length >= minLength;
+    return input?.toString().length >= minLength;
   }
 
   /**

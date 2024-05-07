@@ -466,8 +466,8 @@ test('It should invalidate multiple errors separately', () => {
       success: false,
       error: "Missing the required key: 'second'!"
     },
-    { key: 'first', value: 1, success: false, error: 'Invalid type' },
-    { key: 'third', value: 3, success: false, error: 'Invalid type' }
+    { key: 'box.first', value: 1, success: false, error: 'Invalid type' },
+    { key: 'box.third', value: 3, success: false, error: 'Invalid type' }
   ];
 
   const { errors } = mikrovalid.test(
@@ -492,6 +492,140 @@ test('It should invalidate multiple errors separately', () => {
     { box: { first: 1, third: 3 } }
   );
 
+  expect(errors).toMatchObject(expected);
+});
+
+test('It should output individual validation errors for each failure, even if they are at the same key', () => {
+  const expected = [
+    {
+      key: 'details.name.fullName',
+      value: 'Sam',
+      success: false,
+      error: 'Length too short'
+    },
+    {
+      key: 'details.name.fullName',
+      value: 'Sam',
+      success: false,
+      error: 'Pattern does not match'
+    }
+  ];
+
+  const mikrovalid = new MikroValid(false);
+  const { success, errors } = mikrovalid.test(
+    {
+      properties: {
+        details: {
+          type: 'object',
+          name: {
+            type: 'object',
+            fullName: {
+              type: 'string',
+              minLength: 10,
+              matchesPattern: /^(Harry Mason)$/
+            },
+            required: ['fullName']
+          }
+        }
+      }
+    },
+    {
+      details: {
+        name: {
+          fullName: 'Sam'
+        }
+      }
+    }
+  );
+
+  expect(success).toBe(false);
+  expect(errors).toMatchObject(expected);
+});
+
+test('It should correctly output the full property path of errors', () => {
+  const expected = [
+    { key: 'age', value: '26', success: false, error: 'Invalid type' },
+    { key: 'preferences.doodad', value: {}, success: false, error: 'Invalid type' },
+    { key: 'preferences.things', value: 1, success: false, error: 'Invalid type' },
+    { key: 'preferences.things', value: 3, success: false, error: 'Invalid type' },
+    {
+      key: 'details.name.fullName',
+      value: 'Sam',
+      success: false,
+      error: 'Length too short'
+    },
+    {
+      key: 'address.street',
+      value: 123,
+      success: false,
+      error: 'Invalid type'
+    },
+    {
+      key: 'address.city',
+      value: 123,
+      success: false,
+      error: 'Invalid type'
+    }
+  ];
+
+  const mikrovalid = new MikroValid(false);
+  const { success, errors } = mikrovalid.test(
+    {
+      properties: {
+        age: {
+          type: 'number'
+        },
+        preferences: {
+          type: 'object',
+          doodad: {
+            type: 'string'
+          },
+          things: {
+            type: 'array',
+            minLength: 5,
+            items: {
+              type: 'string'
+            }
+          }
+        },
+        details: {
+          type: 'object',
+          name: {
+            type: 'object',
+            fullName: {
+              type: 'string',
+              minLength: 10
+            },
+            required: ['fullName']
+          }
+        },
+        address: {
+          type: 'object',
+          street: {
+            type: 'string'
+          },
+          city: {
+            type: 'string'
+          }
+        }
+      }
+    },
+    {
+      age: '26',
+      preferences: { doodad: {}, things: [1, '2', 3] },
+      details: {
+        name: {
+          fullName: 'Sam'
+        }
+      },
+      address: {
+        street: 123,
+        city: 123
+      }
+    }
+  );
+
+  expect(success).toBe(false);
   expect(errors).toMatchObject(expected);
 });
 
