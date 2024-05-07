@@ -257,7 +257,7 @@ export class MikroValid {
       keys.forEach((innerKey: string) => {
         this.updatePropertyPath(innerKey, currentPath);
 
-        if (this.isArray(inputKey[innerKey]) && propertyKey[innerKey].items != null)
+        if (this.isArray(inputKey[innerKey]) && propertyKey[innerKey]?.items != null)
           // @ts-ignore
           handleArray(inputKey[innerKey], propertyKey[innerKey]);
         else {
