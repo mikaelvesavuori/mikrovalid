@@ -248,6 +248,20 @@ For this schema, a valid input could for example be something like:
 
 Note that this will not work for mixed arrays or for any deeper inspection of object properties.
 
+#### Multiple types
+
+You can also pass in an array of types if you want to verify that the input corresponds to at least one valid type.
+
+```json
+{
+  "properties": {
+    "field": {
+      "type": ["string", "boolean", "number"]
+    }
+  }
+}
+```
+
 #### Formats
 
 You can use a number of special keywords to specify expectations on the input. These are:

@@ -1,6 +1,7 @@
 import { describe, it, test, expect } from 'vitest';
 
 import { MikroValid } from '../src/domain/MikroValid.js';
+import { ValidationTypes } from '../src/interfaces/MikroValid.js';
 
 const mikrovalid = new MikroValid(true);
 
@@ -633,6 +634,54 @@ test('It should correctly output the full property path of errors', () => {
  * TYPES
  */
 
+describe('Multiple type validation tests', () => {
+  const inputs = ['Hello world', true, false, 128973.212, 42, 2, {}, []];
+
+  inputs.forEach((input) => {
+    it(`It should validate an input that has the correct type for input: ${input} `, () => {
+      const type: ValidationTypes = ['string', 'boolean', 'number', 'object', 'array'];
+      const expected = true;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
+});
+
+describe('Multiple type invalidation tests', () => {
+  const inputs = ['Hello world', `Yo hi wazzap`, true, false, {}, []];
+
+  inputs.forEach((input) => {
+    it(`It should invalidate an input that has an incorrect type for input: ${input} `, () => {
+      const type: ValidationTypes = ['number'];
+      const expected = false;
+      const { success } = mikrovalid.test(
+        {
+          properties: {
+            property: {
+              type: type
+            }
+          }
+        },
+        {
+          property: input
+        }
+      );
+      expect(success).toBe(expected);
+    });
+  });
+});
+
 describe('String validation tests', () => {
   const inputs = [
     '',
@@ -641,11 +690,11 @@ describe('String validation tests', () => {
     `template`,
     '😄',
     '\uD801\uDC00',
-    String.raw`C:\Folder\folder\file.html`
+    String.raw`C: \Folder\folder\file.html`
   ];
 
   inputs.forEach((input) => {
-    it(`It should validate a string that has the correct type for input: ${input}`, () => {
+    it(`It should validate a string that has the correct type for input: ${input} `, () => {
       const type = 'string';
       const expected = true;
       const { success } = mikrovalid.test(
@@ -679,7 +728,7 @@ describe('String invalidation tests', () => {
   ];
 
   inputs.forEach((input) => {
-    it(`It should invalidate a string that has the incorrect type for input: ${input}`, () => {
+    it(`It should invalidate a string that has the incorrect type for input: ${input} `, () => {
       const type = 'string';
       const expected = false;
       const { success } = mikrovalid.test(
@@ -714,7 +763,7 @@ describe('Number validation tests', () => {
   ];
 
   inputs.forEach((input) => {
-    it(`It should validate a number that has the correct type for input: ${input}`, () => {
+    it(`It should validate a number that has the correct type for input: ${input} `, () => {
       const type = 'number';
       const expected = true;
       const { success } = mikrovalid.test(
@@ -746,7 +795,7 @@ describe('Number invalidation tests', () => {
   ];
 
   inputs.forEach((input) => {
-    it(`It should invalidate a number that has the incorrect type for input: ${input}`, () => {
+    it(`It should invalidate a number that has the incorrect type for input: ${input} `, () => {
       const type = 'number';
       const expected = false;
       const { success } = mikrovalid.test(
@@ -770,7 +819,7 @@ describe('Boolean validation tests', () => {
   const inputs = [true, false];
 
   inputs.forEach((input) => {
-    it(`It should validate a boolean that has the correct type for input: ${input}`, () => {
+    it(`It should validate a boolean that has the correct type for input: ${input} `, () => {
       const type = 'boolean';
       const expected = true;
       const { success } = mikrovalid.test(
@@ -798,7 +847,7 @@ describe('Boolean invalidation tests', () => {
   ];
 
   inputs.forEach((input) => {
-    it(`It should invalidate a boolean that has the incorrect type for input: ${input}`, () => {
+    it(`It should invalidate a boolean that has the incorrect type for input: ${input} `, () => {
       const type = 'boolean';
       const expected = false;
       const { success } = mikrovalid.test(
@@ -822,7 +871,7 @@ describe('Object validation tests', () => {
   const inputs = [{ something: 'Object with value', property: 'value' }];
 
   inputs.forEach((input) => {
-    it(`It should validate an object that has the correct type for input: ${input}`, () => {
+    it(`It should validate an object that has the correct type for input: ${input} `, () => {
       const type = 'object';
       const expected = true;
       const { success } = mikrovalid.test(
@@ -846,7 +895,7 @@ describe('Object invalidation tests', () => {
   const inputs = ['string', Infinity, new Date(), new Map(), new Set(), [], function noop() { }];
 
   inputs.forEach((input) => {
-    it(`It should invalidate an object that has the incorrect type for input: ${input}`, () => {
+    it(`It should invalidate an object that has the incorrect type for input: ${input} `, () => {
       const type = 'object';
       const expected = false;
       const { success } = mikrovalid.test(
@@ -870,7 +919,7 @@ describe('Array validation tests', () => {
   const inputs = [[{ property: 'value' }], [], [''], Array({ length: undefined })];
 
   inputs.forEach((input) => {
-    it(`It should validate an object that has the correct type for input: ${input}`, () => {
+    it(`It should validate an object that has the correct type for input: ${input} `, () => {
       const type = 'array';
       const expected = true;
       const { success } = mikrovalid.test(
@@ -894,7 +943,7 @@ describe('Array invalidation tests', () => {
   const inputs = ['[]', {}, { length: 1 }, [].keys(), new Set(), new Map()];
 
   inputs.forEach((input) => {
-    it(`It should invalidate an object that has the incorrect type for input: ${input}`, () => {
+    it(`It should invalidate an object that has the incorrect type for input: ${input} `, () => {
       const type = 'array';
       const expected = false;
       const { success } = mikrovalid.test(

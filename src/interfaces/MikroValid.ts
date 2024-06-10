@@ -22,7 +22,9 @@ export type ValidationValue =
   | Record<string, any>
   | Record<string, any>[];
 
-export type ValidationTypes = 'string' | 'number' | 'boolean' | 'object' | 'array';
+export type ValidationTypes = ValidTypes | ValidTypes[];
+
+type ValidTypes = 'string' | 'number' | 'boolean' | 'object' | 'array';
 
 export type ValidationError = Result;
 

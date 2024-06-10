@@ -176,7 +176,7 @@ export class MikroValid {
    * @description Checks if a value is actually defined as a non-null value.
    */
   private isDefined(value: unknown) {
-    if (!!value || value === '') return true;
+    if (!!value || value === '' || typeof value === 'boolean') return true;
     return false;
   }
 
@@ -412,18 +412,22 @@ export class MikroValid {
    * @description Checks whether or not a type is correct.
    */
   private isCorrectType(expected: ValidationTypes, input: ValidationValue) {
-    switch (expected) {
-      case 'string':
-        return typeof input === 'string';
-      case 'number':
-        return typeof input === 'number' && !isNaN(input);
-      case 'boolean':
-        return typeof input === 'boolean';
-      case 'object':
-        return this.isObject(input as string);
-      case 'array':
-        return this.isArray(input as string);
-    }
+    if (!Array.isArray(expected)) expected = [expected];
+
+    return expected.some((type) => {
+      switch (type) {
+        case 'string':
+          return typeof input === 'string';
+        case 'number':
+          return typeof input === 'number' && !isNaN(input);
+        case 'boolean':
+          return typeof input === 'boolean';
+        case 'object':
+          return this.isObject(input);
+        case 'array':
+          return this.isArray(input);
+      }
+    });
   }
 
   /**
