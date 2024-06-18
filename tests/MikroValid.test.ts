@@ -1417,10 +1417,10 @@ test('It should create a validation schema from the demo example', () => {
         office: { type: 'string', minLength: 1 },
         currency: { type: 'string', minLength: 1 },
         salary: { type: 'number' }
-      }
-    },
-    additionalProperties: false,
-    required: ['personal', 'work']
+      },
+      additionalProperties: false,
+      required: ['personal', 'work']
+    }
   };
 
   const input = {
@@ -1452,10 +1452,10 @@ test('It should create a validation schema from a simple JSON object input which
           type: 'string',
           minLength: 1
         }
-      }
-    },
-    additionalProperties: false,
-    required: ['time', 'cancelled', 'fruits']
+      },
+      additionalProperties: false,
+      required: ['time', 'cancelled', 'fruits']
+    }
   };
 
   const input = {
@@ -1503,10 +1503,10 @@ test('It should create a validation schema from a complex JSON object input whic
           required: ['name'],
           name: { type: 'string', minLength: 1 }
         }
-      }
-    },
-    additionalProperties: false,
-    required: ['identity', 'time', 'cancelled', 'fruits']
+      },
+      additionalProperties: false,
+      required: ['identity', 'time', 'cancelled', 'fruits']
+    }
   };
 
   const input = {
@@ -1526,10 +1526,10 @@ test('It should create a validation schema from a complex JSON object input whic
 test('It should not create array item data when arrays contain mixed types', () => {
   const expected: Record<string, any> = {
     properties: {
-      fruits: { type: 'array' }
-    },
-    additionalProperties: false,
-    required: ['fruits']
+      fruits: { type: 'array' },
+      additionalProperties: false,
+      required: ['fruits']
+    }
   };
 
   const input = {

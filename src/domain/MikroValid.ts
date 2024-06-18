@@ -543,19 +543,21 @@ export class MikroValid {
    * mikrovalid.schemaFrom(input);
    */
   public schemaFrom(input: any): ValidationSchema {
-    const schema: ValidationSchema = { properties: {}, additionalProperties: false, required: [] };
+    const schema: ValidationSchema = {
+      properties: {
+        additionalProperties: false,
+        required: []
+      }
+    };
 
     for (const key in input) {
       const value = input[key];
-      schema.required!.push(key);
+      (schema as Record<string, any>).properties.required.push(key);
 
-      if (Array.isArray(value)) {
-        schema.properties![key] = this.generateArraySchema(value);
-      } else if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) schema.properties![key] = this.generateArraySchema(value);
+      else if (typeof value === 'object' && value !== null)
         schema.properties![key] = this.generateNestedObjectSchema(value);
-      } else {
-        schema.properties![key] = this.generatePropertySchema(value);
-      }
+      else schema.properties![key] = this.generatePropertySchema(value);
     }
 
     return schema;

@@ -105,7 +105,7 @@ export type SchemaDefinition<S> = AllTypes<Extract<ExcludeFromAllTypes<S, keyof 
 
 export type ValidationSchema = {
   type?: string;
-  properties?: { [key: string]: ValidationSchema | PropertySchema };
+  properties?: { [key: string]: ValidationSchema | PropertySchema | unknown }; // Bit of a hack to add `additionalProperties` and `required` via `schemaFrom()`
   additionalProperties?: boolean;
   required?: string[];
   items?: ValidationSchema | PropertySchema; // For arrays
