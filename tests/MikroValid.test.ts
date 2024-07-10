@@ -796,6 +796,24 @@ describe('Other handling', () => {
       "Missing values for required keys: 'domain, error, service, system, version'!"
     );
   });
+
+  test('It should not treat 0 (zero) as an undefined value for a required key', () => {
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          position: { type: 'number' },
+          required: ['position']
+        }
+      } as any,
+      {
+        position: 0
+      }
+    );
+
+    console.log('errors', errors);
+
+    expect(success).toBe(true);
+  });
 });
 
 /**

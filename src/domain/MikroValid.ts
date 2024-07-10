@@ -176,6 +176,7 @@ export class MikroValid {
    * @description Checks if a value is actually defined as a non-null value.
    */
   private isDefined(value: unknown) {
+    if (typeof value === 'number' && value === 0) return true;
     if (!!value || value === '' || typeof value === 'boolean') return true;
     return false;
   }
