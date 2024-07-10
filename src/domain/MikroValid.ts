@@ -191,11 +191,17 @@ export class MikroValid {
     if (!this.areRequiredKeysPresent(schema, input)) {
       const inputKeys = input ? Object.keys(input) : [];
       const missingKeys = this.findNonOverlappingElements(schema, inputKeys);
+
+      const message =
+        missingKeys.length > 0
+          ? `Missing the required key: '${missingKeys.join(', ')}'!`
+          : `Missing values for required keys: '${inputKeys.filter((key) => !input[key]).join(', ')}'!`;
+
       errors.push({
         key: '',
         value: input,
         success: false,
-        error: `Missing the required key: '${missingKeys.join(', ')}'!`
+        error: message
       });
     }
 
@@ -317,10 +323,13 @@ export class MikroValid {
   }
 
   /**
-   * @description Checks if all required keys are present in the input object.
+   * @description Checks if all required keys are present in the input object and that they have a defined value.
    */
   private areRequiredKeysPresent(requiredKeys: string[], input: Record<string, any> = []) {
-    return requiredKeys.every((key) => Object.keys(input).includes(key));
+    return requiredKeys.every((key) => {
+      if (Object.keys(input).includes(key)) return this.isDefined(input[key]);
+      return false;
+    });
   }
 
   /**

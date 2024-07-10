@@ -8,474 +8,473 @@ const mikrovalid = new MikroValid(true);
 /**
  * POSITIVE TESTS
  */
-test('It should set silent mode', () => {
-  let warnCalled = false;
-  const originalWarn = console.warn;
+describe('Settings', () => {
+  test('It should set silent mode', () => {
+    let warnCalled = false;
+    const originalWarn = console.warn;
 
-  try {
-    console.warn = () => (warnCalled = true);
+    try {
+      console.warn = () => (warnCalled = true);
 
-    new MikroValid(true).test(
+      new MikroValid(true).test(
+        {
+          properties: {
+            inside: {
+              type: 'object',
+              thing: {
+                type: 'string'
+              },
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          inside: {
+            somethingElse: '...?'
+          }
+        }
+      );
+
+      expect(warnCalled).toBe(false);
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
+
+  test('It should emit warning messages', () => {
+    let warnCalled = true;
+    const originalWarn = console.warn;
+
+    try {
+      console.warn = () => (warnCalled = false);
+
+      new MikroValid(false).test(
+        {
+          properties: {
+            inside: {
+              type: 'object',
+              thing: {
+                type: 'string'
+              },
+              additionalProperties: false
+            }
+          }
+        },
+        {
+          inside: {
+            somethingElse: '...?'
+          }
+        }
+      );
+
+      expect(warnCalled).toBe(false);
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
+});
+
+describe('String validation', () => {
+  test('It should validate a string', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
       {
         properties: {
-          inside: {
-            type: 'object',
-            thing: {
-              type: 'string'
-            },
-            additionalProperties: false
+          username: {
+            type: 'string'
           }
         }
       },
       {
-        inside: {
-          somethingElse: '...?'
-        }
+        username: 'Sam Person'
       }
     );
 
-    expect(warnCalled).toBe(false);
-  } finally {
-    console.warn = originalWarn;
-  }
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should emit warning messages', () => {
-  let warnCalled = true;
-  const originalWarn = console.warn;
-
-  try {
-    console.warn = () => (warnCalled = false);
-
-    new MikroValid(false).test(
+  test('It should invalidate a string that is too long', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
       {
         properties: {
-          inside: {
-            type: 'object',
-            thing: {
-              type: 'string'
-            },
-            additionalProperties: false
+          username: {
+            type: 'string',
+            maxLength: 2
           }
         }
       },
       {
-        inside: {
-          somethingElse: '...?'
-        }
+        username: 'SamPerson'
       }
     );
 
-    expect(warnCalled).toBe(false);
-  } finally {
-    console.warn = originalWarn;
-  }
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        username: {
-          type: 'string'
+  test('It should invalidate a string that is too short', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          username: {
+            type: 'string',
+            minLength: 20
+          }
         }
+      },
+      {
+        username: 'SamPerson'
       }
-    },
-    {
-      username: 'Sam Person'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that is too long', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        username: {
-          type: 'string',
-          maxLength: 2
+  test('It should not validate an empty string when using matchesPattern', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          thing: {
+            type: 'string',
+            matchesPattern: /^(something)$/
+          }
         }
+      },
+      {
+        thing: ''
       }
-    },
-    {
-      username: 'SamPerson'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
 });
 
-test('It should invalidate a string that is too short', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        username: {
-          type: 'string',
-          minLength: 20
-        }
-      }
-    },
-    {
-      username: 'SamPerson'
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate a number', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        phone: {
-          type: 'number'
-        }
-      }
-    },
-    {
-      phone: 7012312300
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate a number that is too small', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        phone: {
-          type: 'number',
-          minValue: 1000
-        }
-      }
-    },
-    {
-      phone: 999
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate a number that is too big', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        phone: {
-          type: 'number',
-          maxValue: 10
-        }
-      }
-    },
-    {
-      phone: 999
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate an array', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        fruits: {
-          type: 'array'
-        }
-      }
-    },
-    {
-      fruits: ['banana', 'apple', 'orange']
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate an array containing numbers', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        payments: {
-          type: 'array',
-          items: {
+describe('Numeric validation', () => {
+  test('It should validate a number', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          phone: {
             type: 'number'
           }
         }
+      },
+      {
+        phone: 7012312300
       }
-    },
-    {
-      payments: [1000, 700, 540]
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate a number that is too small', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          phone: {
+            type: 'number',
+            minValue: 1000
+          }
+        }
+      },
+      {
+        phone: 999
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate a number that is too big', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          phone: {
+            type: 'number',
+            maxValue: 10
+          }
+        }
+      },
+      {
+        phone: 999
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
 });
 
-test('It should validate an array containing objects', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        books: {
-          type: 'array',
-          items: {
+describe('Array validation', () => {
+  test('It should validate an array', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          fruits: {
+            type: 'array'
+          }
+        }
+      },
+      {
+        fruits: ['banana', 'apple', 'orange']
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate an array containing numbers', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          payments: {
+            type: 'array',
+            items: {
+              type: 'number'
+            }
+          }
+        }
+      },
+      {
+        payments: [1000, 700, 540]
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate an array containing objects', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          books: {
+            type: 'array',
+            items: {
+              type: 'object'
+            }
+          }
+        }
+      },
+      {
+        books: [{ author: 'Cormac McCarthy' }, { author: 'William Blake' }]
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should invalidate an array that should only contain numbers', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          payments: {
+            type: 'array',
+            items: {
+              type: 'number'
+            }
+          }
+        }
+      },
+      {
+        payments: ['1000', 700, 540]
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should invalidate an array that is too long', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          fruits: {
+            type: 'array',
+            maxLength: 2
+          }
+        }
+      },
+      {
+        fruits: ['banana', 'apple', 'orange']
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should invalidate an array that is too short', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          fruits: {
+            type: 'array',
+            minLength: 4
+          }
+        }
+      },
+      {
+        fruits: ['banana', 'apple', 'orange']
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+});
+
+describe('Object validation', () => {
+  test('It should validate an object', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          boxes: {
             type: 'object'
           }
         }
+      },
+      {
+        boxes: {}
       }
-    },
-    {
-      books: [{ author: 'Cormac McCarthy' }, { author: 'William Blake' }]
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate an array that should only contain numbers', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        payments: {
-          type: 'array',
-          items: {
-            type: 'number'
-          }
+  test('It should validate a nested object', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          boxes: {
+            type: 'object',
+            box: {
+              type: 'string'
+            }
+          },
+          required: ['boxes']
         }
+      },
+      {
+        boxes: { box: 'stuff' }
       }
-    },
-    {
-      payments: ['1000', 700, 540]
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
 });
 
-test('It should invalidate an array that is too long', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        fruits: {
-          type: 'array',
-          maxLength: 2
+describe('Optional handling', () => {
+  test('It should skip checking for required properties nested in non-existing optional properties', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          id: { type: 'string' },
+          contextId: { type: 'string' },
+          coordinates: {
+            x: { type: 'number' },
+            y: { type: 'number' },
+            type: 'object',
+            required: ['x', 'y']
+          },
+          required: ['id', 'contextId']
         }
+      },
+      {
+        id: 'some_id',
+        contextId: 'some_id'
       }
-    },
-    {
-      fruits: ['banana', 'apple', 'orange']
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate an array that is too short', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
+  test('It should validate an input that only uses required (not optional) properties', () => {
+    const expected = true;
+
+    const schema: any = {
       properties: {
-        fruits: {
-          type: 'array',
-          minLength: 4
-        }
-      }
-    },
-    {
-      fruits: ['banana', 'apple', 'orange']
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate an object', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        boxes: {
+        url: {
+          type: 'string'
+        },
+        requestMethod: {
+          type: 'string',
+          matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
+        },
+        authentication: {
+          type: 'object',
+          authType: {
+            type: 'string',
+            matchesPattern: /^(header|queryparam|oauth)$/
+          },
+          additionalProperties: false
+        },
+        headers: {
           type: 'object'
-        }
-      }
-    },
-    {
-      boxes: {}
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should not validate an empty string when using matchesPattern', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        thing: {
-          type: 'string',
-          matchesPattern: /^(something)$/
-        }
-      }
-    },
-    {
-      thing: ''
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate a nested object', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        boxes: {
-          type: 'object',
-          box: {
-            type: 'string'
-          }
         },
-        required: ['boxes']
-      }
-    },
-    {
-      boxes: { box: 'stuff' }
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should skip checking for required properties nested in non-existing optional properties', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        id: { type: 'string' },
-        contextId: { type: 'string' },
-        coordinates: {
-          x: { type: 'number' },
-          y: { type: 'number' },
-          type: 'object',
-          required: ['x', 'y']
+        queryParams: {
+          type: 'object'
         },
-        required: ['id', 'contextId']
-      }
-    },
-    {
-      id: 'some_id',
-      contextId: 'some_id'
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate an input that only uses required (not optional) properties', () => {
-  const expected = true;
-
-  const schema: any = {
-    properties: {
-      url: {
-        type: 'string'
-      },
-      requestMethod: {
-        type: 'string',
-        matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
-      },
-      authentication: {
-        type: 'object',
-        authType: {
-          type: 'string',
-          matchesPattern: /^(header|queryparam|oauth)$/
-        },
+        required: ['url', 'requestMethod'],
         additionalProperties: false
-      },
-      headers: {
-        type: 'object'
-      },
-      queryParams: {
-        type: 'object'
-      },
-      required: ['url', 'requestMethod'],
-      additionalProperties: false
-    }
-  };
+      }
+    };
 
-  const input = {
-    url: 'https://ajwh82hd.asdf.xyz',
-    requestMethod: 'POST'
-  };
+    const input = {
+      url: 'https://ajwh82hd.asdf.xyz',
+      requestMethod: 'POST'
+    };
 
-  const { success } = mikrovalid.test(schema, input);
+    const { success } = mikrovalid.test(schema, input);
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a partial failure (invalid optional property)', () => {
-  const expected = false;
+  test('It should invalidate a partial failure (invalid optional property)', () => {
+    const expected = false;
 
-  const schema: any = {
-    properties: {
-      url: {
-        type: 'string'
-      },
-      requestMethod: {
-        type: 'string',
-        matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
-      },
-      queryParams: {
-        type: 'object'
-      },
-      required: ['url'],
-      additionalProperties: false
-    }
-  };
-
-  const input = {
-    url: 'https://ajwh82hd.asdf.xyz',
-    requestMethod: 'POST',
-    queryParams: 'not an object'
-  };
-
-  const { success } = mikrovalid.test(schema, input);
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should invalidate multiple errors separately', () => {
-  const expected = [
-    {
-      key: '',
-      value: { first: 1, third: 3 },
-      success: false,
-      error: "Missing the required key: 'second'!"
-    },
-    { key: 'box.first', value: 1, success: false, error: 'Invalid type' },
-    { key: 'box.third', value: 3, success: false, error: 'Invalid type' }
-  ];
-
-  const { errors } = mikrovalid.test(
-    {
+    const schema: any = {
       properties: {
-        box: {
-          type: 'object',
+        url: {
+          type: 'string'
+        },
+        requestMethod: {
+          type: 'string',
+          matchesPattern: /^(GET|POST|PUT|PATCH|DELETE)$/
+        },
+        queryParams: {
+          type: 'object'
+        },
+        required: ['url'],
+        additionalProperties: false
+      }
+    };
+
+    const input = {
+      url: 'https://ajwh82hd.asdf.xyz',
+      requestMethod: 'POST',
+      queryParams: 'not an object'
+    };
+
+    const { success } = mikrovalid.test(schema, input);
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate an input with additional properties that are allowed', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
           first: {
             type: 'string'
           },
@@ -485,149 +484,318 @@ test('It should invalidate multiple errors separately', () => {
           third: {
             type: 'string'
           },
-          required: ['first', 'second', 'third']
-        },
-        required: ['box']
+          additionalProperties: true
+        }
+      },
+      {
+        first: 'the first',
+        second: 'the first',
+        third: 'the third',
+        fourth: 'the fourth'
       }
-    },
-    { box: { first: 1, third: 3 } }
-  );
+    );
 
-  expect(errors).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should invalidate an input with additional properties that are disallowed', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          first: {
+            type: 'string'
+          },
+          second: {
+            type: 'string'
+          },
+          third: {
+            type: 'string'
+          },
+          additionalProperties: false
+        }
+      },
+      {
+        first: 'the first',
+        second: 'the first',
+        third: 'the third',
+        fourth: 'the fourth'
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should invalidate an input with additional properties that are disallowed in a nested object', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          blip: {
+            type: 'string'
+          },
+          inside: {
+            type: 'object',
+            thing: {
+              type: 'string'
+            },
+            additionalProperties: false
+          }
+        }
+      },
+      {
+        blip: 123,
+        inside: {
+          thing: 'scary monster',
+          somethingElse: '...?'
+        }
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
 });
 
-test('It should output individual validation errors for each failure, even if they are at the same key', () => {
-  const expected = [
-    {
-      key: 'details.name.fullName',
-      value: 'Sam',
-      success: false,
-      error: 'Length too short'
-    },
-    {
-      key: 'details.name.fullName',
-      value: 'Sam',
-      success: false,
-      error: 'Pattern does not match'
-    }
-  ];
+describe('Multiple invalidation', () => {
+  test('It should invalidate multiple errors separately', () => {
+    const expected = [
+      {
+        key: '',
+        value: { first: 1, third: 3 },
+        success: false,
+        error: "Missing the required key: 'second'!"
+      },
+      { key: 'box.first', value: 1, success: false, error: 'Invalid type' },
+      { key: 'box.third', value: 3, success: false, error: 'Invalid type' }
+    ];
 
-  const mikrovalid = new MikroValid(false);
-  const { success, errors } = mikrovalid.test(
-    {
-      properties: {
-        details: {
-          type: 'object',
-          name: {
+    const { errors } = mikrovalid.test(
+      {
+        properties: {
+          box: {
             type: 'object',
-            fullName: {
-              type: 'string',
-              minLength: 10,
-              matchesPattern: /^(Harry Mason)$/
+            first: {
+              type: 'string'
             },
-            required: ['fullName']
+            second: {
+              type: 'string'
+            },
+            third: {
+              type: 'string'
+            },
+            required: ['first', 'second', 'third']
+          },
+          required: ['box']
+        }
+      },
+      { box: { first: 1, third: 3 } }
+    );
+
+    expect(errors).toMatchObject(expected);
+  });
+
+  test('It should output individual validation errors for each failure, even if they are at the same key', () => {
+    const expected = [
+      {
+        key: 'details.name.fullName',
+        value: 'Sam',
+        success: false,
+        error: 'Length too short'
+      },
+      {
+        key: 'details.name.fullName',
+        value: 'Sam',
+        success: false,
+        error: 'Pattern does not match'
+      }
+    ];
+
+    const mikrovalid = new MikroValid(false);
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          details: {
+            type: 'object',
+            name: {
+              type: 'object',
+              fullName: {
+                type: 'string',
+                minLength: 10,
+                matchesPattern: /^(Harry Mason)$/
+              },
+              required: ['fullName']
+            }
+          }
+        }
+      },
+      {
+        details: {
+          name: {
+            fullName: 'Sam'
           }
         }
       }
-    },
-    {
-      details: {
-        name: {
-          fullName: 'Sam'
-        }
-      }
-    }
-  );
+    );
 
-  expect(success).toBe(false);
-  expect(errors).toMatchObject(expected);
+    expect(success).toBe(false);
+    expect(errors).toMatchObject(expected);
+  });
 });
 
-test('It should correctly output the full property path of errors', () => {
-  const expected = [
-    { key: 'age', value: '26', success: false, error: 'Invalid type' },
-    { key: 'preferences.doodad', value: {}, success: false, error: 'Invalid type' },
-    { key: 'preferences.things', value: 1, success: false, error: 'Invalid type' },
-    { key: 'preferences.things', value: 3, success: false, error: 'Invalid type' },
-    {
-      key: 'details.name.fullName',
-      value: 'Sam',
-      success: false,
-      error: 'Length too short'
-    },
-    {
-      key: 'address.street',
-      value: 123,
-      success: false,
-      error: 'Invalid type'
-    },
-    {
-      key: 'address.city',
-      value: 123,
-      success: false,
-      error: 'Invalid type'
-    }
-  ];
+describe('Other handling', () => {
+  test('It should correctly output the full property path of errors', () => {
+    const expected = [
+      { key: 'age', value: '26', success: false, error: 'Invalid type' },
+      { key: 'preferences.doodad', value: {}, success: false, error: 'Invalid type' },
+      { key: 'preferences.things', value: 1, success: false, error: 'Invalid type' },
+      { key: 'preferences.things', value: 3, success: false, error: 'Invalid type' },
+      {
+        key: 'details.name.fullName',
+        value: 'Sam',
+        success: false,
+        error: 'Length too short'
+      },
+      {
+        key: 'address.street',
+        value: 123,
+        success: false,
+        error: 'Invalid type'
+      },
+      {
+        key: 'address.city',
+        value: 123,
+        success: false,
+        error: 'Invalid type'
+      }
+    ];
 
-  const mikrovalid = new MikroValid(false);
-  const { success, errors } = mikrovalid.test(
-    {
-      properties: {
-        age: {
-          type: 'number'
-        },
-        preferences: {
-          type: 'object',
-          doodad: {
-            type: 'string'
+    const mikrovalid = new MikroValid(false);
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          age: {
+            type: 'number'
           },
-          things: {
-            type: 'array',
-            minLength: 5,
-            items: {
+          preferences: {
+            type: 'object',
+            doodad: {
+              type: 'string'
+            },
+            things: {
+              type: 'array',
+              minLength: 5,
+              items: {
+                type: 'string'
+              }
+            }
+          },
+          details: {
+            type: 'object',
+            name: {
+              type: 'object',
+              fullName: {
+                type: 'string',
+                minLength: 10
+              },
+              required: ['fullName']
+            }
+          },
+          address: {
+            type: 'object',
+            street: {
+              type: 'string'
+            },
+            city: {
               type: 'string'
             }
           }
-        },
+        }
+      },
+      {
+        age: '26',
+        preferences: { doodad: {}, things: [1, '2', 3] },
         details: {
-          type: 'object',
           name: {
-            type: 'object',
-            fullName: {
-              type: 'string',
-              minLength: 10
-            },
-            required: ['fullName']
+            fullName: 'Sam'
           }
         },
         address: {
-          type: 'object',
-          street: {
-            type: 'string'
-          },
-          city: {
-            type: 'string'
-          }
+          street: 123,
+          city: 123
         }
       }
-    },
-    {
-      age: '26',
-      preferences: { doodad: {}, things: [1, '2', 3] },
-      details: {
-        name: {
-          fullName: 'Sam'
-        }
-      },
-      address: {
-        street: 123,
-        city: 123
-      }
-    }
-  );
+    );
 
-  expect(success).toBe(false);
-  expect(errors).toMatchObject(expected);
+    expect(success).toBe(false);
+    expect(errors).toMatchObject(expected);
+  });
+
+  test('It should handle undefined values for required keys', () => {
+    const schema = {
+      properties: {
+        domain: { type: 'string' },
+        system: { type: 'string' },
+        service: { type: 'string' },
+        tags: { type: 'array' },
+        custom: { type: 'object' },
+        required: [
+          'eventName',
+          'domain',
+          'system',
+          'service',
+          'version',
+          'id',
+          'timestamp',
+          'timestampHuman',
+          'region',
+          'runtime',
+          'functionName',
+          'functionMemorySize'
+        ],
+        additionalProperties: false,
+        version: { type: 'number' },
+        correlationId: { type: 'string' },
+        error: { type: 'boolean' },
+        id: { type: 'string' },
+        timestamp: { type: 'string' },
+        timestampHuman: { type: 'string' },
+        region: { type: 'string' },
+        runtime: { type: 'string' },
+        functionName: { type: 'string' },
+        functionMemorySize: { type: 'string' },
+        eventName: {
+          type: 'string',
+          matchesPattern:
+            /^(AccountCreated|AccountDeleted|AppCreated|AppDeployed|AppPublished|AppUpdated|AppUnpublished|AppDeleted|ContextCreated|ContextDeleted|DatasetCreated|DatasetDeleted|DatasetHeadersUpdated|DatasetItemCreated|DatasetItemDeleted|DatasetItemUpdated|FacetCreated|FacetDeleted|FacetUpdated|FlowCreated|FlowDeployed|FlowPublished|FlowUpdated|FlowUnpublished|FlowDeleted|StatusUpdated)$/
+        }
+      }
+    };
+
+    const inputItem = {
+      custom: {},
+      domain: undefined,
+      error: false,
+      eventName: 'DatasetCreated',
+      functionMemorySize: '1024',
+      functionName: 'MyFunction',
+      id: '9256d93c-8974-4815-be20-45f9f06f0f4f',
+      region: 'eu-north-1',
+      runtime: 'nodejs20.x',
+      service: undefined,
+      system: undefined,
+      tags: [],
+      timestamp: '1720609599756',
+      timestampHuman: '2024-07-10T11:06:39.756Z',
+      version: undefined
+    };
+
+    const { success, errors } = mikrovalid.test(schema as any, inputItem);
+
+    expect(success).toBe(false);
+    expect(errors[0].error).toBe(
+      "Missing values for required keys: 'domain, error, service, system, version'!"
+    );
+  });
 });
 
 /**
@@ -967,426 +1135,383 @@ describe('Array invalidation tests', () => {
  * FORMATS
  */
 
-test('It should validate a string that has an alphanumeric format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        username: {
-          type: 'string',
-          format: 'alphanumeric'
+describe('Format handling', () => {
+  test('It should validate a string that has an alphanumeric format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          username: {
+            type: 'string',
+            format: 'alphanumeric'
+          }
         }
+      },
+      {
+        username: 'SamPerson'
       }
-    },
-    {
-      username: 'SamPerson'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have an alphanumeric format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        username: {
-          type: 'string',
-          format: 'alphanumeric'
+  test('It should invalidate a string that does not have an alphanumeric format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          username: {
+            type: 'string',
+            format: 'alphanumeric'
+          }
         }
+      },
+      {
+        username: 'aslkjd92 10820918'
       }
-    },
-    {
-      username: 'aslkjd92 10820918'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string that has a numeric format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        phone: {
-          type: 'string',
-          format: 'numeric'
+  test('It should validate a string that has a numeric format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          phone: {
+            type: 'string',
+            format: 'numeric'
+          }
         }
+      },
+      {
+        phone: '123'
       }
-    },
-    {
-      phone: '123'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have a numeric format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        phone: {
-          type: 'string',
-          format: 'numeric'
+  test('It should invalidate a string that does not have a numeric format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          phone: {
+            type: 'string',
+            format: 'numeric'
+          }
         }
+      },
+      {
+        phone: '123x'
       }
-    },
-    {
-      phone: '123x'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string that has an email format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        email: {
-          type: 'string',
-          format: 'email'
+  test('It should validate a string that has an email format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          email: {
+            type: 'string',
+            format: 'email'
+          }
         }
+      },
+      {
+        email: 'asdf@asdf.xyz'
       }
-    },
-    {
-      email: 'asdf@asdf.xyz'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have an email format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        email: {
-          type: 'string',
-          format: 'email'
+  test('It should invalidate a string that does not have an email format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          email: {
+            type: 'string',
+            format: 'email'
+          }
         }
+      },
+      {
+        email: 'asdf@'
       }
-    },
-    {
-      email: 'asdf@'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string that has a date format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        date: {
-          type: 'string',
-          format: 'date'
+  test('It should validate a string that has a date format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          date: {
+            type: 'string',
+            format: 'date'
+          }
         }
+      },
+      {
+        date: '2024-01-01'
       }
-    },
-    {
-      date: '2024-01-01'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have a date format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        date: {
-          type: 'string',
-          format: 'date'
+  test('It should invalidate a string that does not have a date format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          date: {
+            type: 'string',
+            format: 'date'
+          }
         }
+      },
+      {
+        date: '20240101'
       }
-    },
-    {
-      date: '20240101'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string that has a URL format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        website: {
-          type: 'string',
-          format: 'url'
+  test('It should validate a string that has a URL format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          website: {
+            type: 'string',
+            format: 'url'
+          }
         }
+      },
+      {
+        website: 'https://asdf.xyz'
       }
-    },
-    {
-      website: 'https://asdf.xyz'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have a URL format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        website: {
-          type: 'string',
-          format: 'url'
+  test('It should invalidate a string that does not have a URL format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          website: {
+            type: 'string',
+            format: 'url'
+          }
         }
+      },
+      {
+        website: 'asdf.xyz'
       }
-    },
-    {
-      website: 'asdf.xyz'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should validate a string that has a hex color format', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        hex: {
-          type: 'string',
-          format: 'hexColor'
+  test('It should validate a string that has a hex color format', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          hex: {
+            type: 'string',
+            format: 'hexColor'
+          }
         }
+      },
+      {
+        hex: '#ff00ff'
       }
-    },
-    {
-      hex: '#ff00ff'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toMatchObject(expected);
+  });
 
-test('It should invalidate a string that does not have a hex color format', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        hex: {
-          type: 'string',
-          format: 'hexColor'
+  test('It should invalidate a string that does not have a hex color format', () => {
+    const expected = false;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          hex: {
+            type: 'string',
+            format: 'hexColor'
+          }
         }
+      },
+      {
+        hex: '255, 255, 255'
       }
-    },
-    {
-      hex: '255, 255, 255'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
-
-test('It should validate an input with additional properties that are allowed', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        first: {
-          type: 'string'
-        },
-        second: {
-          type: 'string'
-        },
-        third: {
-          type: 'string'
-        },
-        additionalProperties: true
-      }
-    },
-    {
-      first: 'the first',
-      second: 'the first',
-      third: 'the third',
-      fourth: 'the fourth'
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should invalidate an input with additional properties that are disallowed', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        first: {
-          type: 'string'
-        },
-        second: {
-          type: 'string'
-        },
-        third: {
-          type: 'string'
-        },
-        additionalProperties: false
-      }
-    },
-    {
-      first: 'the first',
-      second: 'the first',
-      third: 'the third',
-      fourth: 'the fourth'
-    }
-  );
-
-  expect(success).toMatchObject(expected);
-});
-
-test('It should invalidate an input with additional properties that are disallowed in a nested object', () => {
-  const expected = false;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        blip: {
-          type: 'string'
-        },
-        inside: {
-          type: 'object',
-          thing: {
-            type: 'string'
-          },
-          additionalProperties: false
-        }
-      }
-    },
-    {
-      blip: 123,
-      inside: {
-        thing: 'scary monster',
-        somethingElse: '...?'
-      }
-    }
-  );
-
-  expect(success).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
 });
 
 /**
  * COMPONENTS AND MORE COMPLEX OBJECTS
  */
 
-test('It should validate a Flow Component', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        component: {
-          type: 'string',
-          matchesPattern: /^(function|queue|storage|event)$/
-        },
-        memory: {
-          type: 'number',
-          minValue: 128,
-          maxValue: 3008
-        },
-        architecture: {
-          type: 'string',
-          matchesPattern: /^(arm|x86)$/
-        },
-        runtime: {
-          type: 'string',
-          matchesPattern: /^(nodejs20|python3\.7)$/
-        },
-        code: {
-          type: 'string'
-        },
-        required: ['component', 'memory', 'architecture', 'runtime', 'code']
+describe('Complex objects', () => {
+  test('It should validate a Flow Component', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          component: {
+            type: 'string',
+            matchesPattern: /^(function|queue|storage|event)$/
+          },
+          memory: {
+            type: 'number',
+            minValue: 128,
+            maxValue: 3008
+          },
+          architecture: {
+            type: 'string',
+            matchesPattern: /^(arm|x86)$/
+          },
+          runtime: {
+            type: 'string',
+            matchesPattern: /^(nodejs20|python3\.7)$/
+          },
+          code: {
+            type: 'string'
+          },
+          required: ['component', 'memory', 'architecture', 'runtime', 'code']
+        }
+      },
+      {
+        component: 'function',
+        memory: 512,
+        architecture: 'arm',
+        runtime: 'nodejs20',
+        code: "export async function handler(event, context) { return { statusCode: 200, body: JSON.stringify('Hello world!') } }"
       }
-    },
-    {
-      component: 'function',
-      memory: 512,
-      architecture: 'arm',
-      runtime: 'nodejs20',
-      code: "export async function handler(event, context) { return { statusCode: 200, body: JSON.stringify('Hello world!') } }"
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
+    expect(success).toMatchObject(expected);
+  });
+
+  test('It should validate an App Component', () => {
+    const expected = true;
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          component: {
+            type: 'string',
+            matchesPattern: /^(list|button|text|image|dropdown)$/
+          },
+          name: {
+            type: 'string',
+            minLength: 3,
+            maxLength: 50
+          },
+          imageSource: {
+            type: 'string',
+            matchesPattern: /^(online|local)$/
+          },
+          url: {
+            type: 'string',
+            minLength: 5,
+            maxLength: 120
+          },
+          altText: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 200
+          },
+          required: ['component', 'name', 'imageSource', 'url', 'altText']
+        }
+      },
+      {
+        component: 'image',
+        name: 'My image',
+        imageSource: 'online',
+        url: 'https://something.online.com/alkfjo3iu3.jpg',
+        altText: 'A picture of something'
+      }
+    );
+
+    expect(success).toMatchObject(expected);
+  });
 });
 
-test('It should validate an App Component', () => {
-  const expected = true;
-  const { success } = mikrovalid.test(
-    {
-      properties: {
-        component: {
-          type: 'string',
-          matchesPattern: /^(list|button|text|image|dropdown)$/
+describe('Demo', () => {
+  test('It should work with the demo example', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          personal: {
+            type: 'object',
+            name: { type: 'string' },
+            required: ['name']
+          },
+          work: {
+            type: 'object',
+            office: { type: 'string' },
+            currency: { type: 'string' },
+            salary: { type: 'number' },
+            required: ['office']
+          },
+          required: ['personal', 'work']
+        }
+      },
+      {
+        personal: {
+          name: 'Sam Person'
         },
-        name: {
-          type: 'string',
-          minLength: 3,
-          maxLength: 50
-        },
-        imageSource: {
-          type: 'string',
-          matchesPattern: /^(online|local)$/
-        },
-        url: {
-          type: 'string',
-          minLength: 5,
-          maxLength: 120
-        },
-        altText: {
-          type: 'string',
-          minLength: 1,
-          maxLength: 200
-        },
-        required: ['component', 'name', 'imageSource', 'url', 'altText']
+        work: {
+          office: 'London',
+          currency: 'GBP',
+          salary: 10000
+        }
       }
-    },
-    {
-      component: 'image',
-      name: 'My image',
-      imageSource: 'online',
-      url: 'https://something.online.com/alkfjo3iu3.jpg',
-      altText: 'A picture of something'
-    }
-  );
+    );
 
-  expect(success).toMatchObject(expected);
-});
+    expect(success).toBe(true);
+  });
 
-test('It should work with the demo example', () => {
-  const { success } = mikrovalid.test(
-    {
+  test('It should create a validation schema from the demo example', () => {
+    const expected = {
       properties: {
         personal: {
           type: 'object',
-          name: { type: 'string' },
-          required: ['name']
+          additionalProperties: false,
+          required: ['name'],
+          name: { type: 'string', minLength: 1 }
         },
         work: {
           type: 'object',
-          office: { type: 'string' },
-          currency: { type: 'string' },
-          salary: { type: 'number' },
-          required: ['office']
+          additionalProperties: false,
+          required: ['office', 'currency', 'salary'],
+          office: { type: 'string', minLength: 1 },
+          currency: { type: 'string', minLength: 1 },
+          salary: { type: 'number' }
         },
+        additionalProperties: false,
         required: ['personal', 'work']
       }
-    },
-    {
+    };
+
+    const input = {
       personal: {
         name: 'Sam Person'
       },
@@ -1395,259 +1520,231 @@ test('It should work with the demo example', () => {
         currency: 'GBP',
         salary: 10000
       }
-    }
-  );
+    };
 
-  expect(success).toBe(true);
+    const validationSchema = mikrovalid.schemaFrom(input);
+    const { success } = mikrovalid.test(validationSchema as any, input);
+
+    expect(validationSchema).toMatchObject(expected);
+    expect(success).toBe(true);
+  });
 });
 
-test('It should create a validation schema from the demo example', () => {
-  const expected = {
-    properties: {
-      personal: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['name'],
-        name: { type: 'string', minLength: 1 }
-      },
-      work: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['office', 'currency', 'salary'],
-        office: { type: 'string', minLength: 1 },
-        currency: { type: 'string', minLength: 1 },
-        salary: { type: 'number' }
-      },
-      additionalProperties: false,
-      required: ['personal', 'work']
-    }
-  };
-
-  const input = {
-    personal: {
-      name: 'Sam Person'
-    },
-    work: {
-      office: 'London',
-      currency: 'GBP',
-      salary: 10000
-    }
-  };
-
-  const validationSchema = mikrovalid.schemaFrom(input);
-  const { success } = mikrovalid.test(validationSchema as any, input);
-
-  expect(validationSchema).toMatchObject(expected);
-  expect(success).toBe(true);
-});
-
-test('It should create a validation schema from a simple JSON object input which does not pass due to null input values', () => {
-  const expected: Record<string, any> = {
-    properties: {
-      time: { type: 'string', minLength: 1 },
-      cancelled: { type: 'boolean' },
-      fruits: {
-        type: 'array',
-        items: {
-          type: 'string',
-          minLength: 1
-        }
-      },
-      additionalProperties: false,
-      required: ['time', 'cancelled', 'fruits']
-    }
-  };
-
-  const input = {
-    time: '20240301',
-    cancelled: true,
-    fruits: [null, 'orange']
-  };
-
-  const validationSchema = mikrovalid.schemaFrom(input);
-  const { success } = mikrovalid.test(validationSchema as any, input);
-
-  expect(validationSchema).toMatchObject(expected);
-  expect(success).toBe(false);
-});
-
-test('It should create a validation schema from a complex JSON object input which passes', () => {
-  const expected: Record<string, any> = {
-    properties: {
-      identity: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['name', 'age', 'address'],
-        name: { type: 'string', minLength: 1 },
-        age: { type: 'number' },
-        address: {
-          type: 'object',
-          additionalProperties: false,
-          street: {
+describe('Validation schema creation', () => {
+  test('It should create a validation schema from a simple JSON object input which does not pass due to null input values', () => {
+    const expected: Record<string, any> = {
+      properties: {
+        time: { type: 'string', minLength: 1 },
+        cancelled: { type: 'boolean' },
+        fruits: {
+          type: 'array',
+          items: {
             type: 'string',
             minLength: 1
-          },
-          number: {
-            type: 'number'
-          },
-          required: ['street', 'number']
-        }
-      },
-      time: { type: 'string', minLength: 1 },
-      cancelled: { type: 'boolean' },
-      fruits: {
-        type: 'array',
-        items: {
+          }
+        },
+        additionalProperties: false,
+        required: ['time', 'cancelled', 'fruits']
+      }
+    };
+
+    const input = {
+      time: '20240301',
+      cancelled: true,
+      fruits: [null, 'orange']
+    };
+
+    const validationSchema = mikrovalid.schemaFrom(input);
+    const { success } = mikrovalid.test(validationSchema as any, input);
+
+    expect(validationSchema).toMatchObject(expected);
+    expect(success).toBe(false);
+  });
+
+  test('It should create a validation schema from a complex JSON object input which passes', () => {
+    const expected: Record<string, any> = {
+      properties: {
+        identity: {
           type: 'object',
           additionalProperties: false,
-          required: ['name'],
-          name: { type: 'string', minLength: 1 }
-        }
+          required: ['name', 'age', 'address'],
+          name: { type: 'string', minLength: 1 },
+          age: { type: 'number' },
+          address: {
+            type: 'object',
+            additionalProperties: false,
+            street: {
+              type: 'string',
+              minLength: 1
+            },
+            number: {
+              type: 'number'
+            },
+            required: ['street', 'number']
+          }
+        },
+        time: { type: 'string', minLength: 1 },
+        cancelled: { type: 'boolean' },
+        fruits: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['name'],
+            name: { type: 'string', minLength: 1 }
+          }
+        },
+        additionalProperties: false,
+        required: ['identity', 'time', 'cancelled', 'fruits']
+      }
+    };
+
+    const input = {
+      identity: {
+        name: 'Some text here',
+        age: 123,
+        address: { street: 'Main Street', number: 123 }
       },
-      additionalProperties: false,
-      required: ['identity', 'time', 'cancelled', 'fruits']
-    }
-  };
+      time: '20240301',
+      cancelled: true,
+      fruits: [{ name: 'orange' }, { name: 'banana' }]
+    };
 
-  const input = {
-    identity: { name: 'Some text here', age: 123, address: { street: 'Main Street', number: 123 } },
-    time: '20240301',
-    cancelled: true,
-    fruits: [{ name: 'orange' }, { name: 'banana' }]
-  };
+    const validationSchema = mikrovalid.schemaFrom(input);
+    const { success } = mikrovalid.test(validationSchema as any, input);
 
-  const validationSchema = mikrovalid.schemaFrom(input);
-  const { success } = mikrovalid.test(validationSchema as any, input);
-
-  expect(validationSchema).toMatchObject(expected);
-  expect(success).toBe(true);
-});
-
-test('It should not create array item data when arrays contain mixed types', () => {
-  const expected: Record<string, any> = {
-    properties: {
-      fruits: { type: 'array' },
-      additionalProperties: false,
-      required: ['fruits']
-    }
-  };
-
-  const input = {
-    fruits: ['banana', 'orange', ['apple', 'pear']]
-  };
-
-  const validationSchema = mikrovalid.schemaFrom(input);
-  const { success } = mikrovalid.test(validationSchema as any, input);
-
-  expect(validationSchema).toMatchObject(expected);
-  expect(success).toBe(true);
+    expect(validationSchema).toMatchObject(expected);
+    expect(success).toBe(true);
+  });
 });
 
 /**
  * NEGATIVE TESTS
  */
-test('It should fail when missing a required key in the base', () => {
-  const expected = {
-    error: "Missing the required key: 'thing'!",
-    key: '',
-    success: false,
-    value: {
-      something: 123
-    }
-  };
-
-  const result = mikrovalid.test(
-    {
+describe('Error handling', () => {
+  test('It should not create array item data when arrays contain mixed types', () => {
+    const expected: Record<string, any> = {
       properties: {
-        thing: {
-          type: 'string'
-        },
-        required: ['thing']
+        fruits: { type: 'array' },
+        additionalProperties: false,
+        required: ['fruits']
       }
-    },
-    { something: 123 }
-  );
+    };
 
-  expect(result.errors[0]).toMatchObject(expected);
-});
+    const input = {
+      fruits: ['banana', 'orange', ['apple', 'pear']]
+    };
 
-test('It should fail when missing a required key in the root of a nested object', () => {
-  const expected = {
-    error: "Missing the required key: 'things'!",
-    key: '',
-    success: false,
-    value: {
-      dings: {}
-    }
-  };
+    const validationSchema = mikrovalid.schemaFrom(input);
+    const { success } = mikrovalid.test(validationSchema as any, input);
 
-  const result = mikrovalid.test(
-    {
-      properties: {
-        things: {
-          type: 'object',
-          required: ['nestedThings'],
-          nestedThings: {
-            type: 'string'
-          }
-        },
-        required: ['things']
+    expect(validationSchema).toMatchObject(expected);
+    expect(success).toBe(true);
+  });
+
+  test('It should fail when missing a required key in the base', () => {
+    const expected = {
+      error: "Missing the required key: 'thing'!",
+      key: '',
+      success: false,
+      value: {
+        something: 123
       }
-    },
-    {
-      dings: {}
-    }
-  );
+    };
 
-  expect(result.errors[0]).toMatchObject(expected);
-});
-
-test('It should fail when missing a required key in the child of a nested object', () => {
-  const expected = {
-    error: "Missing the required key: 'deeperThings'!",
-    key: '',
-    success: false,
-    value: {}
-  };
-
-  const result = mikrovalid.test(
-    {
-      properties: {
-        things: {
-          type: 'object',
-          required: ['nestedThings'],
-          nestedThings: {
-            type: 'object',
-            required: ['deeperThings'],
-            deeperThings: {
-              type: 'object',
-              required: ['something'],
-              something: { type: 'number' }
-            }
-          }
-        },
-        required: ['things']
-      }
-    },
-    {
-      things: {
-        nestedThings: {}
-      }
-    }
-  );
-
-  expect(result.errors[0]).toMatchObject(expected);
-});
-
-test('It should throw an error if there is no input', () => {
-  expect(() => {
-    mikrovalid.test(
+    const result = mikrovalid.test(
       {
         properties: {
-          money: { type: 'number' }
+          thing: {
+            type: 'string'
+          },
+          required: ['thing']
         }
       },
-      undefined as any
+      { something: 123 }
     );
-  }).toThrow();
+
+    expect(result.errors[0]).toMatchObject(expected);
+  });
+
+  test('It should fail when missing a required key in the root of a nested object', () => {
+    const expected = {
+      error: "Missing the required key: 'things'!",
+      key: '',
+      success: false,
+      value: {
+        dings: {}
+      }
+    };
+
+    const result = mikrovalid.test(
+      {
+        properties: {
+          things: {
+            type: 'object',
+            required: ['nestedThings'],
+            nestedThings: {
+              type: 'string'
+            }
+          },
+          required: ['things']
+        }
+      },
+      {
+        dings: {}
+      }
+    );
+
+    expect(result.errors[0]).toMatchObject(expected);
+  });
+
+  test('It should fail when missing a required key in the child of a nested object', () => {
+    const expected = {
+      error: "Missing the required key: 'deeperThings'!",
+      key: '',
+      success: false,
+      value: {}
+    };
+
+    const result = mikrovalid.test(
+      {
+        properties: {
+          things: {
+            type: 'object',
+            required: ['nestedThings'],
+            nestedThings: {
+              type: 'object',
+              required: ['deeperThings'],
+              deeperThings: {
+                type: 'object',
+                required: ['something'],
+                something: { type: 'number' }
+              }
+            }
+          },
+          required: ['things']
+        }
+      },
+      {
+        things: {
+          nestedThings: {}
+        }
+      }
+    );
+
+    expect(result.errors[0]).toMatchObject(expected);
+  });
+
+  test('It should throw an error if there is no input', () => {
+    expect(() => {
+      mikrovalid.test(
+        {
+          properties: {
+            money: { type: 'number' }
+          }
+        },
+        undefined as any
+      );
+    }).toThrow();
+  });
 });
