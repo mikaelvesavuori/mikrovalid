@@ -1,7 +1,7 @@
-import { describe, it, test, expect } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 
 import { MikroValid } from '../src/domain/MikroValid.js';
-import { ValidationTypes } from '../src/interfaces/MikroValid.js';
+import type { ValidationTypes } from '../src/interfaces/MikroValid.js';
 
 const mikrovalid = new MikroValid(true);
 
@@ -844,6 +844,70 @@ describe('Multiple type validation tests', () => {
   });
 });
 
+describe('Unknown type handling', () => {
+  test('It should invalidate an input with an unknown type', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          field: {
+            type: 'unknownType' as any
+          }
+        }
+      } as any,
+      { field: 'something' }
+    );
+    expect(success).toBe(false);
+  });
+
+  test('It should handle a property with a non-object schema value and defined input', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          something: 'number' as any
+        }
+      } as any,
+      { something: 42 }
+    );
+    expect(success).toBe(true);
+  });
+
+  test('It should invalidate inner array items with an unknown type', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          data: {
+            type: 'object',
+            items: {
+              type: 'array',
+              items: { type: 'unknownType' as any }
+            }
+          }
+        }
+      } as any,
+      { data: { items: [[1], [2]] } }
+    );
+    expect(success).toBe(false);
+  });
+
+  test('It should validate inner array items with a single (non-array) type via fallback path', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          data: {
+            type: 'object',
+            values: {
+              type: 'array',
+              items: { type: 'number' }
+            }
+          }
+        }
+      } as any,
+      { data: { values: [1, 2, 3] } }
+    );
+    expect(success).toBe(true);
+  });
+});
+
 describe('Multiple type invalidation tests', () => {
   const inputs = ['Hello world', `Yo hi wazzap`, true, false, {}, []];
 
@@ -908,7 +972,7 @@ describe('String invalidation tests', () => {
     Infinity,
     new Set(),
     new Map(),
-    () => { },
+    () => {},
     { [Symbol.toStringTag]: 'Empty Object' },
     { [Symbol.toStringTag]: 'Object with value', property: 'value' }
   ];
@@ -975,7 +1039,7 @@ describe('Number invalidation tests', () => {
     new Date(),
     new Set(),
     new Map(),
-    () => { },
+    () => {},
     { [Symbol.toStringTag]: 'Empty Object' },
     { [Symbol.toStringTag]: 'Object with value', property: 'value' }
   ];
@@ -1078,7 +1142,7 @@ describe('Object validation tests', () => {
 });
 
 describe('Object invalidation tests', () => {
-  const inputs = ['string', Infinity, new Date(), new Map(), new Set(), [], function noop() { }];
+  const inputs = ['string', Infinity, new Date(), new Map(), new Set(), [], function noop() {}];
 
   inputs.forEach((input) => {
     it(`It should invalidate an object that has the incorrect type for input: ${input} `, () => {
@@ -1505,6 +1569,156 @@ describe('Demo', () => {
     );
 
     expect(success).toBe(true);
+  });
+
+  test('It should cache schema metadata across calls with the same schema object', () => {
+    const schema = {
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'number' },
+        required: ['name']
+      }
+    };
+    const input = { name: 'Sam', age: 30 };
+
+    const result1 = mikrovalid.test(schema as any, input);
+    const result2 = mikrovalid.test(schema as any, input);
+
+    expect(result1.success).toBe(true);
+    expect(result2.success).toBe(true);
+  });
+
+  test('It should validate inner array items of various types within nested objects', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          data: {
+            type: 'object',
+            booleans: {
+              type: 'array',
+              items: { type: 'boolean' }
+            },
+            objects: {
+              type: 'array',
+              items: { type: 'object' }
+            },
+            emails: {
+              type: 'array',
+              items: { type: 'string', format: 'email' }
+            },
+            alphanumerics: {
+              type: 'array',
+              items: { type: 'string', format: 'alphanumeric' }
+            },
+            numerics: {
+              type: 'array',
+              items: { type: 'string', format: 'numeric' }
+            },
+            dates: {
+              type: 'array',
+              items: { type: 'string', format: 'date' }
+            },
+            urls: {
+              type: 'array',
+              items: { type: 'string', format: 'url' }
+            },
+            hexColors: {
+              type: 'array',
+              items: { type: 'string', format: 'hexColor' }
+            },
+            numbers: {
+              type: 'array',
+              items: { type: 'number' }
+            },
+            arrays: {
+              type: 'array',
+              items: { type: 'array' }
+            }
+          }
+        }
+      } as any,
+      {
+        data: {
+          booleans: [true, false],
+          objects: [{ a: 1 }, { b: 2 }],
+          emails: ['x@y.zz', 'a@b.cc'],
+          alphanumerics: ['abc123', 'xyz'],
+          numerics: ['123', '-45.6'],
+          dates: ['2024-01-01', '2024-12-31'],
+          urls: ['https://example.com', 'http://foo.org'],
+          hexColors: ['#ff00ff', '#abc'],
+          numbers: [1, 2.5],
+          arrays: [
+            [1, 2],
+            [3, 4]
+          ]
+        }
+      }
+    );
+
+    expect(success).toBe(true);
+  });
+
+  test('It should invalidate inner array items of wrong types within nested objects', () => {
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          data: {
+            type: 'object',
+            booleans: {
+              type: 'array',
+              items: { type: 'boolean' }
+            },
+            emails: {
+              type: 'array',
+              items: { type: 'string', format: 'email' }
+            }
+          }
+        }
+      } as any,
+      {
+        data: {
+          booleans: [true, 'not a boolean'],
+          emails: ['valid@email.com', 'not-an-email']
+        }
+      }
+    );
+
+    expect(success).toBe(false);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  test('It should validate and invalidate inner array items with constraints within nested objects', () => {
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          data: {
+            type: 'object',
+            names: {
+              type: 'array',
+              items: { type: 'string', minLength: 3, maxLength: 5, matchesPattern: /^[a-z]+$/ }
+            },
+            values: {
+              type: 'array',
+              items: { type: 'number', minValue: 10, maxValue: 100 }
+            }
+          }
+        }
+      } as any,
+      {
+        data: {
+          names: ['abc', 'toolongname', 'ab', '123'],
+          values: [50, 5, 200]
+        }
+      }
+    );
+
+    expect(success).toBe(false);
+    expect(errors.some((e: any) => e.error === 'Length too short')).toBe(true);
+    expect(errors.some((e: any) => e.error === 'Length too long')).toBe(true);
+    expect(errors.some((e: any) => e.error === 'Pattern does not match')).toBe(true);
+    expect(errors.some((e: any) => e.error === 'Value too small')).toBe(true);
+    expect(errors.some((e: any) => e.error === 'Value too large')).toBe(true);
   });
 
   test('It should create a validation schema from the demo example', () => {

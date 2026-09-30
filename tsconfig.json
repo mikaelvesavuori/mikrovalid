@@ -4,7 +4,7 @@
     "moduleResolution": "NodeNext",
     "outDir": "lib",
     "target": "es2022",
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
     "declaration": true,
     "esModuleInterop": true,
     "importHelpers": false,
@@ -17,7 +17,8 @@
     "resolveJsonModule": true,
     "sourceMap": false,
     "strict": true,
-    "strictFunctionTypes": true
+    "strictFunctionTypes": true,
+    "ignoreDeprecations": "6.0"
   },
   "include": ["./src/**/*.ts", "./tests/**/*.ts"],
   "exclude": ["./node_modules/", "./lib/"]

@@ -1,4 +1,4 @@
-import {
+import type {
   FirstLevelDefinition,
   PropertySchema,
   Result,
@@ -6,11 +6,177 @@ import {
   SchemaDefinition,
   ValidationError,
   ValidationFormat,
-  ValidationResult,
   ValidationSchema,
   ValidationTypes,
   ValidationValue
 } from '../interfaces/MikroValid.js';
+
+const RE_ALPHANUMERIC = /^[a-zA-Z0-9]+$/;
+const RE_NUMERIC = /^-?\d+(\.\d+)?$/;
+const RE_EMAIL = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const RE_URL = /^(https?):\/\/[^\s$.?#].[^\s]*$/;
+const RE_HEXCOLOR = /^#?([a-f0-9]{6}|[a-f0-9]{3})$/i;
+
+interface SchemaMeta {
+  propKeys: string[];
+  requiredSet: Set<string>;
+  requiredKeys: string[];
+  additionalProperties: boolean;
+  schemaKeys: string[];
+  propValidators: PropValidator[];
+  propMetas: (SchemaMeta | null)[];
+  propItems: (SchemaDefinition<any> | null)[];
+  propItemsValidators: (PropValidator | null)[];
+  propSchemas: Record<string, any>[];
+  propValidatorMap: Map<string, PropValidator>;
+}
+
+type PropValidator = (path: string, value: ValidationValue, results: Result[]) => void;
+
+function isPlainObject(input: any): boolean {
+  return (
+    input !== null &&
+    typeof input === 'object' &&
+    !Array.isArray(input) &&
+    Object.getPrototypeOf(input) === Object.prototype
+  );
+}
+
+function compilePropValidator(propSchema: Record<string, any>): PropValidator {
+  const type = propSchema.type;
+  const format = propSchema.format;
+  const minLength = propSchema.minLength;
+  const maxLength = propSchema.maxLength;
+  const minValue = propSchema.minValue;
+  const maxValue = propSchema.maxValue;
+  const matchesPattern = propSchema.matchesPattern;
+
+  let typeChecker: ((input: ValidationValue) => boolean) | null = null;
+  if (type) {
+    const types: string[] = Array.isArray(type) ? type : [type];
+    const checkers = types.map((t) => {
+      switch (t) {
+        case 'string':
+          return (input: ValidationValue) => typeof input === 'string';
+        case 'number':
+          return (input: ValidationValue) =>
+            typeof input === 'number' && !Number.isNaN(input as number);
+        case 'boolean':
+          return (input: ValidationValue) => typeof input === 'boolean';
+        case 'object':
+          return (input: ValidationValue) => isPlainObject(input);
+        case 'array':
+          return (input: ValidationValue) => Array.isArray(input);
+        default:
+          return () => false;
+      }
+    });
+    typeChecker = (input: ValidationValue) => checkers.some((c) => c(input));
+  }
+
+  let formatChecker: ((input: string) => boolean) | null = null;
+  if (format) {
+    switch (format) {
+      case 'alphanumeric':
+        formatChecker = (input) => RE_ALPHANUMERIC.test(input);
+        break;
+      case 'numeric':
+        formatChecker = (input) => RE_NUMERIC.test(input);
+        break;
+      case 'email':
+        formatChecker = (input) => RE_EMAIL.test(input);
+        break;
+      case 'date':
+        formatChecker = (input) => RE_DATE.test(input);
+        break;
+      case 'url':
+        formatChecker = (input) => RE_URL.test(input);
+        break;
+      case 'hexColor':
+        formatChecker = (input) => RE_HEXCOLOR.test(input);
+        break;
+    }
+  }
+
+  return (path: string, value: ValidationValue, results: Result[]) => {
+    if (typeChecker && !typeChecker(value))
+      results.push({ key: path, value, success: false, error: 'Invalid type' });
+
+    if (formatChecker && !formatChecker(value as string))
+      results.push({ key: path, value, success: false, error: 'Invalid format' });
+
+    if (minLength && !isMinLen(minLength, value))
+      results.push({ key: path, value, success: false, error: 'Length too short' });
+
+    if (maxLength && !isMaxLen(maxLength, value))
+      results.push({ key: path, value, success: false, error: 'Length too long' });
+
+    if (minValue && !isMinVal(minValue, value as number))
+      results.push({ key: path, value, success: false, error: 'Value too small' });
+
+    if (maxValue && !isMaxVal(maxValue, value as number))
+      results.push({ key: path, value, success: false, error: 'Value too large' });
+
+    if (matchesPattern && !matchesPattern.test(value as string))
+      results.push({ key: path, value, success: false, error: 'Pattern does not match' });
+  };
+}
+
+function isMinLen(minLength: number, input: ValidationValue) {
+  if (Array.isArray(input)) return input.length >= minLength;
+  return input?.toString().length >= minLength;
+}
+
+function isMaxLen(maxLength: number, input: ValidationValue) {
+  if (Array.isArray(input)) return input.length <= maxLength;
+  return input?.toString().length <= maxLength;
+}
+
+function isMinVal(minValue: number, input: number) {
+  return input >= minValue;
+}
+
+function isMaxVal(maxValue: number, input: number) {
+  return input <= maxValue;
+}
+
+function checkType(expected: ValidationTypes, input: ValidationValue): boolean {
+  if (!Array.isArray(expected)) expected = [expected];
+  return expected.some((type) => {
+    switch (type) {
+      case 'string':
+        return typeof input === 'string';
+      case 'number':
+        return typeof input === 'number' && !Number.isNaN(input);
+      case 'boolean':
+        return typeof input === 'boolean';
+      case 'object':
+        return isPlainObject(input);
+      case 'array':
+        return Array.isArray(input);
+      default:
+        return false;
+    }
+  });
+}
+
+function checkFormat(expected: ValidationFormat, input: string): boolean {
+  switch (expected) {
+    case 'alphanumeric':
+      return RE_ALPHANUMERIC.test(input);
+    case 'numeric':
+      return RE_NUMERIC.test(input);
+    case 'email':
+      return RE_EMAIL.test(input);
+    case 'date':
+      return RE_DATE.test(input);
+    case 'url':
+      return RE_URL.test(input);
+    case 'hexColor':
+      return RE_HEXCOLOR.test(input);
+  }
+}
 
 export class MikroValid {
   /**
@@ -20,8 +186,57 @@ export class MikroValid {
 
   private propertyPath: string = '';
 
+  private metaCache = new WeakMap<object, SchemaMeta>();
+
   constructor(isSilent = false) {
     this.isSilent = isSilent;
+  }
+
+  private getMeta(schema: Record<string, any>): SchemaMeta {
+    let meta = this.metaCache.get(schema);
+    if (meta) return meta;
+
+    const schemaKeys = Object.keys(schema);
+    const propKeys: string[] = [];
+    for (const key of schemaKeys) {
+      if (key !== 'required' && key !== 'additionalProperties') propKeys.push(key);
+    }
+
+    const propValidators: PropValidator[] = [];
+    const propMetas: (SchemaMeta | null)[] = [];
+    const propItems: (SchemaDefinition<any> | null)[] = [];
+    const propItemsValidators: (PropValidator | null)[] = [];
+    const propSchemas: Record<string, any>[] = [];
+    const propValidatorMap = new Map<string, PropValidator>();
+
+    for (const key of propKeys) {
+      const propSchema = schema[key];
+      const isObj = typeof propSchema === 'object' && propSchema !== null;
+      const validator = compilePropValidator(propSchema);
+      propValidators.push(validator);
+      propValidatorMap.set(key, validator);
+      propMetas.push(isObj ? this.getMeta(propSchema) : null);
+      const items = propSchema?.items ?? null;
+      propItems.push(items);
+      propItemsValidators.push(items ? compilePropValidator(items) : null);
+      propSchemas.push(propSchema);
+    }
+
+    meta = {
+      propKeys,
+      requiredSet: new Set(schema.required || []),
+      requiredKeys: schema.required || [],
+      additionalProperties: schema.additionalProperties ?? true,
+      schemaKeys,
+      propValidators,
+      propMetas,
+      propItems,
+      propItemsValidators,
+      propSchemas,
+      propValidatorMap
+    };
+    this.metaCache.set(schema, meta);
+    return meta;
   }
 
   /**
@@ -77,11 +292,10 @@ export class MikroValid {
 
     const { results, errors } = this.validate(schema.properties, input);
     const aggregatedErrors = this.compileErrors(results, errors);
-    const success = this.isSuccessful(results, aggregatedErrors);
 
     return {
       errors: aggregatedErrors,
-      success
+      success: aggregatedErrors.length === 0
     };
   }
 
@@ -90,16 +304,7 @@ export class MikroValid {
    */
   private compileErrors(results: Result[], errors: ValidationError[]): ValidationError[] {
     const resultErrors = results.filter((result: Result) => result.success === false);
-    return [...errors, ...resultErrors].flatMap((error: Result) => error);
-  }
-
-  /**
-   * @description Check if this was, ultimately, a successful and valid test run.
-   */
-  private isSuccessful(results: Result[], errors: ValidationError[]) {
-    return (
-      results.every((result: Record<string, any>) => result.success === true) && errors.length === 0
-    );
+    return errors.concat(resultErrors);
   }
 
   /**
@@ -112,39 +317,51 @@ export class MikroValid {
     results: Result[] = [],
     errors: ValidationError[] = []
   ) {
-    const isAdditionalsOk = schema?.additionalProperties ?? true;
-    const requiredKeys: string[] = schema?.required || [];
+    const meta = this.getMeta(schema as Record<string, any>);
 
-    errors = this.checkForRequiredKeysErrors(requiredKeys, input, errors);
+    errors = this.checkForRequiredKeysErrors(meta.requiredKeys, input, errors);
     errors = this.checkForDisallowedProperties(
       Object.keys(input),
-      Object.keys(schema),
+      meta.schemaKeys,
       errors,
-      isAdditionalsOk
+      meta.additionalProperties
     );
 
-    for (const key in schema) {
-      const isKeyRequired = requiredKeys.includes(key) && key !== 'required';
-      const propertyKey = schema[key];
+    for (let i = 0; i < meta.propKeys.length; i++) {
+      const key = meta.propKeys[i];
+      const isKeyRequired = meta.requiredSet.has(key);
+      const propertyKey = meta.propSchemas[i];
       const inputKey: ValidationValue = input[key];
-      const isInnerAdditionalsOk = propertyKey.additionalProperties ?? true;
+      const innerMeta = meta.propMetas[i];
+      const innerAdditionalsOk = innerMeta?.additionalProperties ?? true;
+      const innerSchemaKeys = innerMeta?.schemaKeys ?? [];
+      const innerRequiredKeys = innerMeta?.requiredKeys ?? [];
 
       if (isKeyRequired) {
         errors = this.checkForRequiredKeysErrors(
-          propertyKey.required || [],
+          innerRequiredKeys,
           inputKey as Record<string, any>,
           errors
         );
       }
 
       if (this.isDefined(inputKey)) {
-        this.handleValidation(key, inputKey, propertyKey, results);
+        this.handleValidationCompiled(
+          key,
+          inputKey,
+          propertyKey,
+          meta.propValidators[i],
+          meta.propItems[i],
+          meta.propItemsValidators[i],
+          innerMeta ? innerMeta.propValidatorMap : new Map(),
+          results
+        );
 
         errors = this.checkForDisallowedProperties(
           Object.keys(inputKey),
-          Object.keys(propertyKey),
+          innerSchemaKeys,
           errors,
-          isInnerAdditionalsOk
+          innerAdditionalsOk
         );
 
         this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
@@ -176,9 +393,9 @@ export class MikroValid {
    * @description Checks if a value is actually defined as a non-null value.
    */
   private isDefined(value: unknown) {
-    if (typeof value === 'number' && value === 0) return true;
-    if (!!value || value === '' || typeof value === 'boolean') return true;
-    return false;
+    if (value === 0 && typeof value === 'number') return true;
+    if (value === '' || typeof value === 'boolean') return true;
+    return !!value;
   }
 
   /**
@@ -234,55 +451,61 @@ export class MikroValid {
 
   /**
    * @description Runs validation in the right way, based on whether the
-   * input is an object or not.
+   * input is an object or not. Uses pre-compiled validators.
    */
-  private handleValidation<Schema extends Record<string, any>>(
+  private handleValidationCompiled(
     key: string,
     inputKey: ValidationValue,
-    propertyKey: SchemaDefinition<Schema>,
+    propertyKey: Record<string, any>,
+    validator: PropValidator,
+    itemsSchema: SchemaDefinition<any> | null,
+    itemsValidator: PropValidator | null,
+    validatorMap: Map<string, PropValidator>,
     results: Result[]
   ) {
     this.updatePropertyPath(key);
 
-    const validation = this.validateProperty(this.propertyPath, propertyKey, inputKey);
-    results.push(...validation);
+    validator(this.propertyPath, inputKey, results);
 
-    const handleArray = (inputKey: ValidationValue, propertyKey: SchemaDefinition<Schema>) => {
-      // @ts-ignore - inputKey is an array
-      inputKey.forEach((arrayItem: ValidationValue) => {
-        const validation = this.validateProperty(this.propertyPath, propertyKey.items!, arrayItem);
-        results.push(...validation);
-      });
-
+    if (Array.isArray(inputKey) && itemsSchema != null && itemsValidator) {
+      for (const arrayItem of inputKey as unknown[]) {
+        itemsValidator(this.propertyPath, arrayItem as ValidationValue, results);
+      }
       this.updatePropertyPath();
-    };
-
-    const handleObject = (inputKey: any) => {
-      const keys = Object.keys(inputKey);
+    } else if (isPlainObject(inputKey)) {
+      const objInput = inputKey as Record<string, any>;
+      const keys = Object.keys(objInput);
       const currentPath = this.propertyPath;
 
-      keys.forEach((innerKey: string) => {
+      for (const innerKey of keys) {
         this.updatePropertyPath(innerKey, currentPath);
 
-        if (this.isArray(inputKey[innerKey]) && propertyKey[innerKey]?.items != null)
-          // @ts-ignore
-          handleArray(inputKey[innerKey], propertyKey[innerKey]);
-        else {
-          const validation = this.validateProperty(
-            this.propertyPath,
-            propertyKey[innerKey],
-            // @ts-ignore - innerKey will be an object
-            inputKey[innerKey]
-          );
+        const innerValue = objInput[innerKey];
+        const innerSchema = propertyKey[innerKey];
 
-          results.push(...validation);
+        if (Array.isArray(innerValue) && innerSchema?.items != null) {
+          const itemsSchema = innerSchema.items;
+          for (const arrayItem of innerValue as unknown[]) {
+            this.pushValidationErrors(
+              this.propertyPath,
+              itemsSchema,
+              arrayItem as ValidationValue,
+              results
+            );
+          }
+          this.updatePropertyPath();
+        } else {
+          const innerValidator = validatorMap.get(innerKey);
+          if (innerValidator) {
+            innerValidator(this.propertyPath, innerValue, results);
+          } else {
+            this.pushValidationErrors(this.propertyPath, innerSchema, innerValue, results);
+          }
         }
-      });
-    };
-
-    if (this.isArray(inputKey) && propertyKey.items != null) handleArray(inputKey, propertyKey);
-    else if (this.isObject(inputKey)) handleObject(inputKey);
-    else this.updatePropertyPath();
+      }
+    } else {
+      this.updatePropertyPath();
+    }
   }
 
   /**
@@ -295,10 +518,8 @@ export class MikroValid {
     results: Result[],
     errors: ValidationError[]
   ) {
-    if (this.isObject(inputKey)) {
-      const nestedObjects = this.getNestedObjects(inputKey);
-
-      for (const nested of nestedObjects) {
+    if (isPlainObject(inputKey)) {
+      for (const nested of Object.keys(inputKey)) {
         const nextSchema = propertyKey[nested];
         const nextInput = inputKey[nested];
         if (nextSchema && typeof nextInput === 'object')
@@ -308,227 +529,67 @@ export class MikroValid {
   }
 
   /**
-   * @description Get the name of all objects with nesting from a parent object.
-   */
-  private getNestedObjects(item: ValidationValue) {
-    return Object.keys(item).filter((key: string) => {
-      if (this.isObject(item as string)) return key;
-    });
-  }
-
-  /**
    * @description Return a list of all unique, non-overlapping elements from an array.
    */
   private findNonOverlappingElements(target: string[], truth: string[]) {
-    return target.filter((value: string) => !truth.includes(value));
+    const truthSet = new Set(truth);
+    return target.filter((value: string) => !truthSet.has(value));
   }
 
   /**
    * @description Checks if all required keys are present in the input object and that they have a defined value.
    */
   private areRequiredKeysPresent(requiredKeys: string[], input: Record<string, any> = []) {
-    return requiredKeys.every((key) => {
-      if (Object.keys(input).includes(key)) return this.isDefined(input[key]);
-      return false;
-    });
+    if (requiredKeys.length === 0) return true;
+    const inputKeys = new Set(Object.keys(input));
+    return requiredKeys.every((key) => inputKeys.has(key) && this.isDefined(input[key]));
   }
 
   /**
-   * @description Controller for validation purposes. Returns back a more comprehensive validation object.
+   * @description Validates a single property and pushes any errors directly into the results array.
    */
-  private validateProperty<Schema>(
+  private pushValidationErrors<Schema extends Record<string, any>>(
     key: string,
     properties: SchemaDefinition<Schema>,
-    value: ValidationValue
-  ): Result[] {
-    //const { success, error } = this.validateInput(properties, value);
-    const results = this.validateInput(properties, value);
-
-    return results.map((result: ValidationResult) => {
-      const { success, error } = result;
-
-      return {
-        key,
-        value,
-        success,
-        error: error ?? ''
-      };
-    });
-  }
-
-  /**
-   * @description Performs field-level validation.
-   */
-  private validateInput<Schema extends Record<string, any>>(
-    properties: SchemaDefinition<Schema>,
-    match: ValidationValue
-  ): ValidationResult[] {
-    if (properties) {
-      const checks = [
-        {
-          condition: () => properties['type'],
-          validator: () => this.isCorrectType(properties['type']!, match),
-          error: 'Invalid type'
-        },
-        {
-          condition: () => properties['format'],
-          validator: () => this.isCorrectFormat(properties['format']!, match as string),
-          error: 'Invalid format'
-        },
-        {
-          condition: () => properties['minLength'],
-          validator: () => this.isMinimumLength(properties['minLength']!, match),
-          error: 'Length too short'
-        },
-        {
-          condition: () => properties['maxLength'],
-          validator: () => this.isMaximumLength(properties['maxLength']!, match),
-          error: 'Length too long'
-        },
-        {
-          condition: () => properties['minValue'],
-          validator: () => this.isMinimumValue(properties['minValue']!, match as number),
-          error: 'Value too small'
-        },
-        {
-          condition: () => properties['maxValue'],
-          validator: () => this.isMaximumValue(properties['maxValue']!, match as number),
-          error: 'Value too large'
-        },
-        {
-          condition: () => properties['matchesPattern'],
-          validator: () => this.matchesPattern(properties['matchesPattern']!, match as string),
-          error: 'Pattern does not match'
-        }
-      ];
-
-      const results: any = [];
-
-      for (const check of checks) {
-        if (check.condition() && !check.validator())
-          results.push({ success: false, error: check.error });
-      }
-
-      return results;
-    } else {
+    value: ValidationValue,
+    results: Result[]
+  ) {
+    if (!properties) {
       if (!this.isSilent)
-        console.warn(`Missing property '${properties}' for match '${match}'. Skipping...`);
+        console.warn(`Missing property '${properties}' for match '${value}'. Skipping...`);
+      results.push({ key, value, success: true, error: '' });
+      return;
     }
 
-    return [{ success: true }];
-  }
+    const props = properties as Record<string, any>;
+    const type = props.type;
+    const format = props.format;
+    const minLength = props.minLength;
+    const maxLength = props.maxLength;
+    const minValue = props.minValue;
+    const maxValue = props.maxValue;
+    const matchesPattern = props.matchesPattern as RegExp | undefined;
 
-  /**
-   * @description Checks whether or not a type is correct.
-   */
-  private isCorrectType(expected: ValidationTypes, input: ValidationValue) {
-    if (!Array.isArray(expected)) expected = [expected];
+    if (type && !checkType(type, value))
+      results.push({ key, value, success: false, error: 'Invalid type' });
 
-    return expected.some((type) => {
-      switch (type) {
-        case 'string':
-          return typeof input === 'string';
-        case 'number':
-          return typeof input === 'number' && !isNaN(input);
-        case 'boolean':
-          return typeof input === 'boolean';
-        case 'object':
-          return this.isObject(input);
-        case 'array':
-          return this.isArray(input);
-      }
-    });
-  }
+    if (format && !checkFormat(format, value as string))
+      results.push({ key, value, success: false, error: 'Invalid format' });
 
-  /**
-   * @description Checks if input is an object.
-   */
-  private isObject(input: any) {
-    return (
-      input !== null &&
-      !this.isArray(input) &&
-      typeof input === 'object' &&
-      input instanceof Object &&
-      Object.prototype.toString.call(input) === '[object Object]' // This will solve many validation cases, but will break Symbol support
-    );
-  }
+    if (minLength && !isMinLen(minLength, value))
+      results.push({ key, value, success: false, error: 'Length too short' });
 
-  /**
-   * @description Checks if input is an array.
-   */
-  private isArray(input: unknown) {
-    return Array.isArray(input);
-  }
+    if (maxLength && !isMaxLen(maxLength, value))
+      results.push({ key, value, success: false, error: 'Length too long' });
 
-  /**
-   * @description Checks if the input string matches a particular format.
-   *
-   * Valid formats are:
-   * - `alphanumeric`
-   * - `date`
-   * - `email`
-   * - `hexColor`
-   * - `numeric`
-   * - `url`
-   */
-  private isCorrectFormat(expected: ValidationFormat, input: string) {
-    switch (expected) {
-      case 'alphanumeric': {
-        return new RegExp(/^[a-zA-Z0-9]+$/).test(input);
-      }
-      case 'numeric': {
-        return new RegExp(/^-?\d+(\.\d+)?$/).test(input);
-      }
-      case 'email': {
-        return new RegExp(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/).test(input);
-      }
-      case 'date': {
-        return new RegExp(/^\d{4}-\d{2}-\d{2}$/).test(input);
-      }
-      case 'url': {
-        return new RegExp(/^(https?):\/\/[^\s$.?#].[^\s]*$/).test(input);
-      }
-      case 'hexColor': {
-        return new RegExp(/^#?([a-f0-9]{6}|[a-f0-9]{3})$/i).test(input);
-      }
-    }
-  }
+    if (minValue && !isMinVal(minValue, value as number))
+      results.push({ key, value, success: false, error: 'Value too small' });
 
-  /**
-   * @description Checks if an input is of a minimum length. Works for both arrays and strings.
-   */
-  private isMinimumLength(minLength: number, input: ValidationValue) {
-    if (Array.isArray(input)) return input.length >= minLength;
-    return input?.toString().length >= minLength;
-  }
+    if (maxValue && !isMaxVal(maxValue, value as number))
+      results.push({ key, value, success: false, error: 'Value too large' });
 
-  /**
-   * @description Checks if an input is of a maximum length. Works for both arrays and strings.
-   */
-  private isMaximumLength(maxLength: number, input: ValidationValue) {
-    if (Array.isArray(input)) return input.length <= maxLength;
-    return input.toString().length <= maxLength;
-  }
-
-  /**
-   * @description Checks if an inpu is of a minimum numeric value.
-   */
-  private isMinimumValue(minValue: number, input: number) {
-    return input >= minValue;
-  }
-
-  /**
-   * @description Checks if an input is of a maximum numeric value.
-   */
-  private isMaximumValue(minValue: number, input: number) {
-    return input <= minValue;
-  }
-
-  /**
-   * @description Checks whether a string matches against a user-provided regular expression.
-   */
-  private matchesPattern(pattern: RegExp, input: string) {
-    return new RegExp(pattern).test(input);
+    if (matchesPattern && !matchesPattern.test(value as string))
+      results.push({ key, value, success: false, error: 'Pattern does not match' });
   }
 
   /**
@@ -560,14 +621,16 @@ export class MikroValid {
       }
     };
 
+    const properties = schema.properties as Record<string, any>;
+
     for (const key in input) {
       const value = input[key];
-      (schema as Record<string, any>).properties.required.push(key);
+      properties.required.push(key);
 
-      if (Array.isArray(value)) schema.properties![key] = this.generateArraySchema(value);
+      if (Array.isArray(value)) properties[key] = this.generateArraySchema(value);
       else if (typeof value === 'object' && value !== null)
-        schema.properties![key] = this.generateNestedObjectSchema(value);
-      else schema.properties![key] = this.generatePropertySchema(value);
+        properties[key] = this.generateNestedObjectSchema(value);
+      else properties[key] = this.generatePropertySchema(value);
     }
 
     return schema;

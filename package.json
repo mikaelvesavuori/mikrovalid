@@ -1,7 +1,7 @@
 {
   "name": "mikrovalid",
   "description": "MikroValid is the JSON validator that cuts out all the bullshit.",
-  "version": "1.0.23",
+  "version": "2.0.0",
   "author": "Mikael Vesavuori",
   "license": "MIT",
   "type": "module",
@@ -42,20 +42,17 @@
     "clean": "rm -rf lib && rm -rf dist",
     "package": "npm pack",
     "prepublishOnly": "npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "npx biome check --write ./src ./tests",
+    "lint:check": "npx biome check ./src ./tests"
   },
   "devDependencies": {
-    "@types/node": "20",
-    "@typescript-eslint/eslint-plugin": "7",
-    "@typescript-eslint/parser": "7",
-    "@vitest/coverage-v8": "2",
-    "eslint": "8",
-    "eslint-config-prettier": "9",
-    "eslint-plugin-prettier": "5",
+    "@biomejs/biome": "2",
+    "@types/node": "24",
+    "@vitest/coverage-v8": "5",
     "husky": "9",
-    "prettier": "3",
     "tsup": "8",
-    "typescript": "5",
-    "vitest": "2"
+    "typescript": "6",
+    "vitest": "5"
   }
 }
