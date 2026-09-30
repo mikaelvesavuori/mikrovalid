@@ -12,11 +12,12 @@
 
 MikroValid is the JSON validator that cuts out all the bullshit:
 
-- Dead easy, no proprietary stuff — uses simple JSON objects for schemas and input
+- Dead easy, no proprietary stuff — uses simple JSON objects for schemas and input
 - Doesn't pollute your code with "convenient" APIs
 - Minimalist approach that will work for the majority of conventional-type objects
 - Meant to work effortlessly in both client- and server-side environments
-- Tiny (~2.2 KB gzipped), which is ~7-80x smaller than common, popular options
+- Tiny (~2.6 KB gzipped) — ~5.5x smaller than Zod, and ~8x lighter to load
+- Faster than Zod across every benchmarked scenario (flat, nested, deep, array, realistic, and invalid inputs)
 - Zero dependencies
 - Has 100% test coverage
 
