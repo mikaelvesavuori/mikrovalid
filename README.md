@@ -6,8 +6,6 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mikaelvesavuori_mikrovalid&metric=alert_status)](https://sonarcloud.io/dashboard?id=mikaelvesavuori_mikrovalid)
 
-[![codecov](https://codecov.io/gh/mikaelvesavuori/mikrovalid/graph/badge.svg?token=2P5YYO89J2)](https://codecov.io/gh/mikaelvesavuori/mikrovalid)
-
 [![Maintainability](https://api.codeclimate.com/v1/badges/d42f8b255d893431050f/maintainability)](https://codeclimate.com/github/mikaelvesavuori/mikrovalid/maintainability)
 
 ---
