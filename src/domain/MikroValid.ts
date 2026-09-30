@@ -354,7 +354,8 @@ export class MikroValid {
           meta.propItems[i],
           meta.propItemsValidators[i],
           innerMeta ? innerMeta.propValidatorMap : new Map(),
-          results
+          results,
+          errors
         );
 
         errors = this.checkForDisallowedProperties(
@@ -363,8 +364,6 @@ export class MikroValid {
           errors,
           innerAdditionalsOk
         );
-
-        this.handleNestedObject(inputKey as Record<string, any>, propertyKey, results, errors);
       }
     }
 
@@ -461,7 +460,8 @@ export class MikroValid {
     itemsSchema: SchemaDefinition<any> | null,
     itemsValidator: PropValidator | null,
     validatorMap: Map<string, PropValidator>,
-    results: Result[]
+    results: Result[],
+    errors: ValidationError[]
   ) {
     this.updatePropertyPath(key);
 
@@ -502,29 +502,13 @@ export class MikroValid {
             this.pushValidationErrors(this.propertyPath, innerSchema, innerValue, results);
           }
         }
+
+        if (innerSchema && isPlainObject(innerValue)) {
+          this.validate(innerSchema, innerValue as Record<string, any>, results, errors);
+        }
       }
     } else {
       this.updatePropertyPath();
-    }
-  }
-
-  /**
-   * @description Check for nested objects and handle them.
-   * @note Currently, this skips checking array contents.
-   */
-  private handleNestedObject(
-    inputKey: Record<string, any>,
-    propertyKey: Record<string, any>,
-    results: Result[],
-    errors: ValidationError[]
-  ) {
-    if (isPlainObject(inputKey)) {
-      for (const nested of Object.keys(inputKey)) {
-        const nextSchema = propertyKey[nested];
-        const nextInput = inputKey[nested];
-        if (nextSchema && typeof nextInput === 'object')
-          this.validate(nextSchema, nextInput, results, errors);
-      }
     }
   }
 
