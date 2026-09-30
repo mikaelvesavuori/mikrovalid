@@ -11,13 +11,13 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest']
-        node-version: [20.x]
+        node-version: [24]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -36,7 +36,7 @@ jobs:
           slug: mikaelvesavuori/mikrovalid
 
       - name: Send coverage report with Code Climate
-        uses: paambaati/codeclimate-action@v5.0.0
+        uses: paambaati/codeclimate-action@v9.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
           coverageLocations: ${{ github.workspace }}/coverage/lcov.info:lcov
@@ -45,10 +45,10 @@ jobs:
     needs: ['build-unix']
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org/
       - run: |
           npm ci --ignore-scripts
