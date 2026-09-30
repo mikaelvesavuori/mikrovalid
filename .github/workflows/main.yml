@@ -3,17 +3,20 @@ name: main
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
     branches:
-      - 'main'
+      - "main"
+
+permissions:
+  contents: write
 
 jobs:
   build-unix:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest']
+        os: ["ubuntu-latest"]
         node-version: [24]
     steps:
       - name: Checkout
