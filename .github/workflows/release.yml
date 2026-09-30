@@ -3,14 +3,14 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   build-unix:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest']
+        os: ["ubuntu-latest"]
         node-version: [24]
     steps:
       - name: Checkout
@@ -30,7 +30,7 @@ jobs:
         run: npm test
 
       - name: Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: mikaelvesavuori/mikrovalid
@@ -42,7 +42,7 @@ jobs:
           coverageLocations: ${{ github.workspace }}/coverage/lcov.info:lcov
 
   publish-npm:
-    needs: ['build-unix']
+    needs: ["build-unix"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
