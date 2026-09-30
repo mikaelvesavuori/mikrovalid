@@ -22,8 +22,10 @@ interface SchemaMeta {
   propKeys: string[];
   requiredSet: Set<string>;
   requiredKeys: string[];
+  hasRequired: boolean;
   additionalProperties: boolean;
   schemaKeys: string[];
+  schemaKeySet: Set<string>;
   propValidators: PropValidator[];
   propMetas: (SchemaMeta | null)[];
   propItems: (SchemaDefinition<any> | null)[];
@@ -33,6 +35,9 @@ interface SchemaMeta {
 }
 
 type PropValidator = (path: string, value: ValidationValue, results: Result[]) => void;
+
+const EMPTY_MAP = new Map<string, PropValidator>();
+const EMPTY_ERRORS: ValidationError[] = Object.freeze([]) as unknown as ValidationError[];
 
 function isPlainObject(input: any): boolean {
   return (
@@ -226,8 +231,10 @@ export class MikroValid {
       propKeys,
       requiredSet: new Set(schema.required || []),
       requiredKeys: schema.required || [],
+      hasRequired: (schema.required || []).length > 0,
       additionalProperties: schema.additionalProperties ?? true,
       schemaKeys,
+      schemaKeySet: new Set(schemaKeys),
       propValidators,
       propMetas,
       propItems,
@@ -291,6 +298,16 @@ export class MikroValid {
     this.updatePropertyPath();
 
     const { results, errors } = this.validate(schema.properties, input);
+
+    if (errors.length === 0) {
+      const failed: Result[] = [];
+      for (let i = 0; i < results.length; i++) {
+        if (!results[i].success) failed.push(results[i]);
+      }
+      if (failed.length === 0) return { errors: EMPTY_ERRORS, success: true };
+      return { errors: failed, success: false };
+    }
+
     const aggregatedErrors = this.compileErrors(results, errors);
 
     return {
@@ -319,51 +336,58 @@ export class MikroValid {
   ) {
     const meta = this.getMeta(schema as Record<string, any>);
 
-    errors = this.checkForRequiredKeysErrors(meta.requiredKeys, input, errors);
-    errors = this.checkForDisallowedProperties(
-      Object.keys(input),
-      meta.schemaKeys,
-      errors,
-      meta.additionalProperties
-    );
+    if (meta.hasRequired) {
+      errors = this.checkForRequiredKeysErrors(meta.requiredKeys, input, errors);
+    }
+    if (!meta.additionalProperties) {
+      errors = this.checkForDisallowedProperties(
+        Object.keys(input),
+        meta.schemaKeySet,
+        errors,
+        false
+      );
+    }
 
-    for (let i = 0; i < meta.propKeys.length; i++) {
-      const key = meta.propKeys[i];
-      const isKeyRequired = meta.requiredSet.has(key);
-      const propertyKey = meta.propSchemas[i];
+    const propKeys = meta.propKeys;
+    const len = propKeys.length;
+
+    for (let i = 0; i < len; i++) {
+      const key = propKeys[i];
       const inputKey: ValidationValue = input[key];
-      const innerMeta = meta.propMetas[i];
-      const innerAdditionalsOk = innerMeta?.additionalProperties ?? true;
-      const innerSchemaKeys = innerMeta?.schemaKeys ?? [];
-      const innerRequiredKeys = innerMeta?.requiredKeys ?? [];
 
-      if (isKeyRequired) {
-        errors = this.checkForRequiredKeysErrors(
-          innerRequiredKeys,
-          inputKey as Record<string, any>,
-          errors
-        );
+      if (meta.requiredSet.has(key)) {
+        const innerMeta = meta.propMetas[i];
+        if (innerMeta?.hasRequired) {
+          errors = this.checkForRequiredKeysErrors(
+            innerMeta.requiredKeys,
+            inputKey as Record<string, any>,
+            errors
+          );
+        }
       }
 
       if (this.isDefined(inputKey)) {
+        const innerMeta = meta.propMetas[i];
         this.handleValidationCompiled(
           key,
           inputKey,
-          propertyKey,
+          meta.propSchemas[i],
           meta.propValidators[i],
           meta.propItems[i],
           meta.propItemsValidators[i],
-          innerMeta ? innerMeta.propValidatorMap : new Map(),
+          innerMeta ? innerMeta.propValidatorMap : EMPTY_MAP,
           results,
           errors
         );
 
-        errors = this.checkForDisallowedProperties(
-          Object.keys(inputKey),
-          innerSchemaKeys,
-          errors,
-          innerAdditionalsOk
-        );
+        if (innerMeta && !innerMeta.additionalProperties && isPlainObject(inputKey)) {
+          errors = this.checkForDisallowedProperties(
+            Object.keys(inputKey),
+            innerMeta.schemaKeySet,
+            errors,
+            false
+          );
+        }
       }
     }
 
@@ -380,12 +404,13 @@ export class MikroValid {
       return;
     }
 
-    if (startValue) this.propertyPath = startValue;
-
-    this.propertyPath = `${this.propertyPath}.${key}`;
-
-    if (this.propertyPath.startsWith('.'))
-      this.propertyPath = this.propertyPath.substring(1, this.propertyPath.length);
+    if (startValue) {
+      this.propertyPath = `${startValue}.${key}`;
+    } else if (this.propertyPath) {
+      this.propertyPath = `${this.propertyPath}.${key}`;
+    } else {
+      this.propertyPath = key;
+    }
   }
 
   /**
@@ -430,12 +455,12 @@ export class MikroValid {
    */
   private checkForDisallowedProperties(
     inputKeys: string[],
-    propertyKeys: string[],
+    propertyKeys: Set<string>,
     errors: ValidationError[],
     isAdditionalsOk: boolean
   ) {
     if (!isAdditionalsOk) {
-      const additionals = this.findNonOverlappingElements(inputKeys, propertyKeys);
+      const additionals = inputKeys.filter((value: string) => !propertyKeys.has(value));
       if (additionals.length > 0)
         errors.push({
           key: `${propertyKeys}`,
@@ -523,10 +548,12 @@ export class MikroValid {
   /**
    * @description Checks if all required keys are present in the input object and that they have a defined value.
    */
-  private areRequiredKeysPresent(requiredKeys: string[], input: Record<string, any> = []) {
+  private areRequiredKeysPresent(requiredKeys: string[], input: Record<string, any> = {}) {
     if (requiredKeys.length === 0) return true;
-    const inputKeys = new Set(Object.keys(input));
-    return requiredKeys.every((key) => inputKeys.has(key) && this.isDefined(input[key]));
+    for (const key of requiredKeys) {
+      if (!(key in input) || !this.isDefined(input[key])) return false;
+    }
+    return true;
   }
 
   /**
