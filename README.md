@@ -120,6 +120,8 @@ A valid input for this particular schema is:
 
 Using the `schemaFrom()` method, you can easily generate schemas for your input. This is especially useful in a programmatic environment in which you can't decide or know before-hand what schema to create. Note that the generated schemas should work for the majority of cases, but you should try this functionality out before relying fully on it.
 
+Because the schema format is flat, keys that collide with reserved schema keywords (`type`, `required`, and `additionalProperties`) cannot hold both metadata and a property definition. When such keys are present in your input, `schemaFrom()` still counts them as required and won't flag them as additional properties, but leaves their types unconstrained. A warning about this is emitted unless you run in silent mode.
+
 #### Properties
 
 `properties` is the only **required** root-level object. Each key describes a property of the expected input. In the example, `name` is of the type `string`. Note that you never repeat the `properties` keyword—it's used only in the root.

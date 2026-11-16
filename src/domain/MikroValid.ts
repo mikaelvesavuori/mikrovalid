@@ -39,6 +39,12 @@ type PropValidator = (path: string, value: ValidationValue, results: Result[]) =
 const EMPTY_MAP = new Map<string, PropValidator>();
 const EMPTY_ERRORS: ValidationError[] = Object.freeze([]) as unknown as ValidationError[];
 
+/** Keys reserved for metadata in the root properties of generated schemas. */
+const ROOT_RESERVED_KEYS = new Set<string>(['required', 'additionalProperties']);
+
+/** Keys reserved for metadata in generated, nested object schemas. */
+const NODE_RESERVED_KEYS = new Set<string>(['type', 'required', 'additionalProperties']);
+
 function isPlainObject(input: any): boolean {
   return (
     input !== null &&
@@ -50,12 +56,13 @@ function isPlainObject(input: any): boolean {
 
 function compilePropValidator(propSchema: Record<string, any>): PropValidator {
   const type = propSchema.type;
-  const format = propSchema.format;
-  const minLength = propSchema.minLength;
-  const maxLength = propSchema.maxLength;
-  const minValue = propSchema.minValue;
-  const maxValue = propSchema.maxValue;
-  const matchesPattern = propSchema.matchesPattern;
+  const format = typeof propSchema.format === 'string' ? propSchema.format : null;
+  const minLength = typeof propSchema.minLength === 'number' ? propSchema.minLength : null;
+  const maxLength = typeof propSchema.maxLength === 'number' ? propSchema.maxLength : null;
+  const minValue = typeof propSchema.minValue === 'number' ? propSchema.minValue : null;
+  const maxValue = typeof propSchema.maxValue === 'number' ? propSchema.maxValue : null;
+  const matchesPattern =
+    propSchema.matchesPattern instanceof RegExp ? propSchema.matchesPattern : null;
 
   let typeChecker: ((input: ValidationValue) => boolean) | null = null;
   if (type) {
@@ -528,7 +535,7 @@ export class MikroValid {
           }
         }
 
-        if (innerSchema && isPlainObject(innerValue)) {
+        if (isPlainObject(innerSchema) && isPlainObject(innerValue)) {
           this.validate(innerSchema, innerValue as Record<string, any>, results, errors);
         }
       }
@@ -574,17 +581,18 @@ export class MikroValid {
 
     const props = properties as Record<string, any>;
     const type = props.type;
-    const format = props.format;
-    const minLength = props.minLength;
-    const maxLength = props.maxLength;
-    const minValue = props.minValue;
-    const maxValue = props.maxValue;
-    const matchesPattern = props.matchesPattern as RegExp | undefined;
+    const format = typeof props.format === 'string' ? props.format : null;
+    const minLength = typeof props.minLength === 'number' ? props.minLength : null;
+    const maxLength = typeof props.maxLength === 'number' ? props.maxLength : null;
+    const minValue = typeof props.minValue === 'number' ? props.minValue : null;
+    const maxValue = typeof props.maxValue === 'number' ? props.maxValue : null;
+    const matchesPattern =
+      props.matchesPattern instanceof RegExp ? props.matchesPattern : undefined;
 
     if (type && !checkType(type, value))
       results.push({ key, value, success: false, error: 'Invalid type' });
 
-    if (format && !checkFormat(format, value as string))
+    if (format && !checkFormat(format as ValidationFormat, value as string))
       results.push({ key, value, success: false, error: 'Invalid format' });
 
     if (minLength && !isMinLen(minLength, value))
@@ -638,6 +646,11 @@ export class MikroValid {
       const value = input[key];
       properties.required.push(key);
 
+      if (ROOT_RESERVED_KEYS.has(key)) {
+        this.warnSkippedProperty(key);
+        continue;
+      }
+
       if (Array.isArray(value)) properties[key] = this.generateArraySchema(value);
       else if (typeof value === 'object' && value !== null)
         properties[key] = this.generateNestedObjectSchema(value);
@@ -649,7 +662,7 @@ export class MikroValid {
 
   private generateArraySchema(array: unknown[]): ValidationSchema {
     const schema: Record<string, any> = { type: 'array' };
-    const cleanedArray = array.filter((element) => element);
+    const cleanedArray = array.filter((element) => element != null);
 
     if (cleanedArray.length > 0) {
       const firstElement = cleanedArray[0];
@@ -657,12 +670,17 @@ export class MikroValid {
       const allOfSameType = cleanedArray.every((element) => typeof element === typeof firstElement);
 
       if (allOfSameType) {
-        if (typeof firstElement === 'object' && !Array.isArray(firstElement)) {
+        if (Array.isArray(firstElement)) {
+          schema.items = this.generateArraySchema(firstElement);
+        } else if (typeof firstElement === 'object') {
           schema.items = this.generateNestedObjectSchema(firstElement as Record<string, any>);
         } else {
-          schema.items = this.generatePropertySchema(firstElement);
+          const items = this.generatePropertySchema(firstElement);
+          if (items.type === 'string' && cleanedArray.some((element) => element === ''))
+            delete items.minLength;
+          schema.items = items;
         }
-      } else {
+      } else if (!this.isSilent) {
         console.warn(
           'All elements in array are not of the same type. Unable to generate a schema for these elements.'
         );
@@ -682,9 +700,16 @@ export class MikroValid {
     for (const key in input) {
       const value = input[key];
       schema.required.push(key);
-      if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+
+      if (NODE_RESERVED_KEYS.has(key)) {
+        this.warnSkippedProperty(key);
+        continue;
+      }
+
+      if (Array.isArray(value)) schema[key] = this.generateArraySchema(value);
+      else if (typeof value === 'object' && value !== null)
         schema[key] = this.generateNestedObjectSchema(value);
-      } else schema[key] = this.generatePropertySchema(value);
+      else schema[key] = this.generatePropertySchema(value);
     }
 
     return schema as ValidationSchema;
@@ -696,10 +721,22 @@ export class MikroValid {
 
     switch (type) {
       case 'string':
-        schema.minLength = 1;
+        if (value !== '') schema.minLength = 1;
         break;
     }
 
     return schema as PropertySchema;
+  }
+
+  /**
+   * @description The flat schema format only holds one value per key, so
+   * input properties that collide with reserved schema keywords keep their
+   * metadata meaning and cannot be type-constrained in generated schemas.
+   */
+  private warnSkippedProperty(key: string) {
+    if (!this.isSilent)
+      console.warn(
+        `Property '${key}' collides with a reserved schema keyword and will not be type-constrained.`
+      );
   }
 }

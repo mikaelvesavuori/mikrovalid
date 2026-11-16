@@ -1850,6 +1850,181 @@ describe('Validation schema creation', () => {
   });
 });
 
+describe('Generated schema round-trips', () => {
+  const roundTripInputs: Record<string, any>[] = [
+    { user: { tags: ['a', 'b'] } },
+    { matrix: [[1, 2]] },
+    { matrix: [[[1]]] },
+    { name: '' },
+    { values: [0, 'a'] },
+    { empty: [] },
+    { zeros: [0, 0] },
+    { flags: [false, true] },
+    { blanks: ['a', ''] },
+    { user: { type: 'admin' } },
+    { user: { type: { deep: 1 } } },
+    { required: true },
+    { additionalProperties: false },
+    { type: 'admin' },
+    { items: [1, 2] },
+    { box: { minLength: 5 } },
+    { user: { required: 5 } },
+    { user: { additionalProperties: 'nope' } }
+  ];
+
+  for (const input of roundTripInputs) {
+    it(`It should validate its own generated schema for input: ${JSON.stringify(input)}`, () => {
+      const schema = mikrovalid.schemaFrom(input);
+      const { success, errors } = mikrovalid.test(schema as any, input);
+
+      expect(errors).toEqual([]);
+      expect(success).toBe(true);
+    });
+  }
+
+  test('It should generate an array schema for nested arrays in objects', () => {
+    const schema = mikrovalid.schemaFrom({ user: { tags: ['a', 'b'] } }) as any;
+
+    expect(schema.properties.user).toEqual({
+      type: 'object',
+      additionalProperties: false,
+      required: ['tags'],
+      tags: { type: 'array', items: { type: 'string', minLength: 1 } }
+    });
+  });
+
+  test('It should generate an array schema for nested array items', () => {
+    const schema = mikrovalid.schemaFrom({ matrix: [[1, 2]] }) as any;
+
+    expect(schema.properties.matrix).toEqual({
+      type: 'array',
+      items: { type: 'array', items: { type: 'number' } }
+    });
+  });
+
+  test('It should not add minLength for empty strings', () => {
+    const schema = mikrovalid.schemaFrom({ name: '' }) as any;
+
+    expect(schema.properties.name).toEqual({ type: 'string' });
+  });
+
+  test('It should not drop falsy elements when checking item types', () => {
+    const schema = mikrovalid.schemaFrom({ values: [0, 'a'] }) as any;
+
+    expect(schema.properties.values).toEqual({ type: 'array' });
+  });
+
+  test('It should relax the item minLength when an array contains empty strings', () => {
+    const schema = mikrovalid.schemaFrom({ blanks: ['a', ''] }) as any;
+
+    expect(schema.properties.blanks).toEqual({ type: 'array', items: { type: 'string' } });
+  });
+
+  test("It should preserve metadata when a nested input key is named 'type'", () => {
+    const schema = mikrovalid.schemaFrom({ user: { type: 'admin' } }) as any;
+
+    expect(schema.properties.user).toEqual({
+      type: 'object',
+      additionalProperties: false,
+      required: ['type']
+    });
+  });
+
+  test("It should preserve metadata when the input key is named 'required'", () => {
+    const schema = mikrovalid.schemaFrom({ required: true }) as any;
+
+    expect(schema.properties).toEqual({
+      additionalProperties: false,
+      required: ['required']
+    });
+  });
+
+  test("It should still constrain input keys named 'type' at the root level", () => {
+    const schema = mikrovalid.schemaFrom({ type: 'admin' }) as any;
+
+    expect(schema.properties.type).toEqual({ type: 'string', minLength: 1 });
+  });
+
+  test('It should emit a warning for mixed-type arrays unless silent', () => {
+    let warnCalled = false;
+    const originalWarn = console.warn;
+
+    try {
+      console.warn = () => (warnCalled = true);
+
+      new MikroValid(false).schemaFrom({ values: [0, 'a'] });
+
+      expect(warnCalled).toBe(true);
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
+
+  test('It should emit a warning for input keys colliding with schema keywords unless silent', () => {
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+
+    try {
+      console.warn = (message: string) => warnings.push(message);
+
+      new MikroValid(false).schemaFrom({ user: { type: 'admin' } });
+
+      expect(warnings.length).toBe(1);
+      expect(warnings[0]).toContain("Property 'type' collides");
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
+});
+
+describe('Schema keyword collisions', () => {
+  test("It should not throw when a nested 'type' key has an object value", () => {
+    const input = { user: { type: { deep: 1 } } };
+    const schema = mikrovalid.schemaFrom(input);
+
+    expect(() => mikrovalid.test(schema as any, input)).not.toThrow();
+  });
+
+  test('It should treat properties named like constraints as properties in nested schemas', () => {
+    const { success, errors } = mikrovalid.test(
+      {
+        properties: {
+          box: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['minLength'],
+            minLength: { type: 'number' }
+          },
+          required: ['box']
+        }
+      } as any,
+      { box: { minLength: 5 } }
+    );
+
+    expect(errors).toEqual([]);
+    expect(success).toBe(true);
+  });
+
+  test('It should invalidate wrong types for properties named like constraints', () => {
+    const { success } = mikrovalid.test(
+      {
+        properties: {
+          box: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['minLength'],
+            minLength: { type: 'number' }
+          },
+          required: ['box']
+        }
+      } as any,
+      { box: { minLength: 'oops' } }
+    );
+
+    expect(success).toBe(false);
+  });
+});
+
 /**
  * NEGATIVE TESTS
  */
